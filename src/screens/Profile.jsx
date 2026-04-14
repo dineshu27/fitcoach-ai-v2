@@ -1,21 +1,25 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Edit3, RefreshCw, AlertCircle, Trash2, TrendingDown, TrendingUp, Minus } from "lucide-react";
+import { Edit3, RefreshCw, AlertCircle, Trash2, TrendingDown, TrendingUp, Minus, Sun, Moon, Sunset, ChevronLeft, ChevronRight, X } from "lucide-react";
 import REX from "../components/REX";
 import { cache } from "../lib/cache";
 import { generateWeeklyPlan } from "../lib/api";
 import { calcBMI, calcBMR, calcTDEE, calcTargetCalories, calcMacros, bmiCategory, calcWaterIntake, calcHeartRateZones, dayStreak } from "../lib/calculations";
 import PlanLoading from "./PlanLoading";
+import { useTheme } from "../lib/theme";
 
 const COND_COLORS = {
   "High LDL / High Cholesterol":    { bg: "rgba(255,107,107,0.15)", border: "rgba(255,107,107,0.3)",  color: "#FF6B6B" },
   "Type 2 Diabetes":                 { bg: "rgba(255,165,0,0.15)",   border: "rgba(255,165,0,0.3)",    color: "#FFA500" },
   "Hypertension (High Blood Pressure)": { bg: "rgba(255,107,107,0.12)", border: "rgba(255,107,107,0.25)", color: "#FF6B6B" },
-  "PCOS":                            { bg: "rgba(var(--c-accent-rgb),0.15)",  border: "rgba(var(--c-accent-rgb),0.3)",   color: "var(--c-accent)" },
+  "PCOS":                            { bg: "rgba(var(--c-accent-rgb),0.15)", border: "rgba(var(--c-accent-rgb),0.3)", color: "var(--c-accent)" },
   "Thyroid condition":               { bg: "rgba(78,205,196,0.15)",  border: "rgba(78,205,196,0.3)",   color: "#4ECDC4" },
   "Obesity (BMI 30+)": { bg: "var(--c-warn-bg)", border: "var(--c-warn-border)", color: "var(--c-warn)" },
-  "Joint pain / Arthritis":          { bg: "rgba(78,205,196,0.12)",  border: "rgba(78,205,196,0.25)", color: "#4ECDC4" },
+  "Joint pain / Arthritis":          { bg: "rgba(78,205,196,0.12)", border: "rgba(78,205,196,0.25)", color: "#4ECDC4" },
 };
+
+const THEME_ICONS = { auto: Sunset, light: Sun, dark: Moon };
+const THEME_LABELS = { auto: "Auto", light: "Light", dark: "Dark" };
 
 function ActionBtn({ onClick, Icon, label, style }) {
   return (
@@ -61,7 +65,6 @@ function ProjectionCard({ label, weeks, currentWeight, deficitPerDay }) {
   const isGain = kgChange > 0.05;
   const Icon = isLoss ? TrendingDown : isGain ? TrendingUp : Minus;
   const color = isLoss ? "#4ECDC4" : isGain ? "var(--c-warn)" : "var(--c-sub)";
-
   return (
     <div className="rounded-xl p-3 text-center" style={{ background: "var(--c-card)", border: "1px solid var(--c-border)" }}>
       <p className="text-[10px] font-semibold mb-1" style={{ color: "var(--c-sub)" }}>{label}</p>
@@ -69,11 +72,175 @@ function ProjectionCard({ label, weeks, currentWeight, deficitPerDay }) {
         <Icon size={14} style={{ color }} />
         <p className="text-lg font-extrabold" style={{ color: "var(--c-text)" }}>{projectedWeight.toFixed(1)}<span className="text-xs font-normal">kg</span></p>
       </div>
-      <p className="text-[10px]" style={{ color }}>
-        {kgChange > 0 ? "+" : ""}{kgChange.toFixed(1)} kg
-      </p>
+      <p className="text-[10px]" style={{ color }}>{kgChange > 0 ? "+" : ""}{kgChange.toFixed(1)} kg</p>
     </div>
   );
+}
+
+/* ── Activity Calendar ─────────────────────────────────────────────── */
+function ActivityCalendar() {
+  const [viewDate, setViewDate] = useState(new Date());
+  const year = viewDate.getFullYear();
+  const month = viewDate.getMonth();
+
+  const firstDay = new Date(year, month, 1).getDay(); // 0=Sun
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const today = new Date();
+  const todayStr = today.toDateString();
+
+  const cells = [];
+  for (let i = 0; i < firstDay; i++) cells.push(null);
+  for (let d = 1; d <= daysInMonth; d++) {
+    const date = new Date(year, month, d);
+    cells.push(date);
+  }
+
+  function cellColor(date) {
+    if (!date) return "transparent";
+    const ds = date.toDateString();
+    const log = cache.getDailyLog(ds);
+    const hasFood = (log.foods?.length || 0) > 0;
+    const hasEx = (log.doneExercises?.length || 0) > 0;
+    if (hasFood && hasEx) return "var(--c-accent)";
+    if (hasEx) return "var(--c-accent-bg)";
+    if (hasFood) return "var(--c-warn-bg)";
+    if (cache.isDaySkipped(ds)) return "rgba(128,128,170,0.15)";
+    return "var(--c-pill-inactive)";
+  }
+
+  const monthLabel = viewDate.toLocaleDateString("en-GB", { month: "long", year: "numeric" });
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-3">
+        <button onClick={() => setViewDate(new Date(year, month - 1))}
+          className="p-1.5 rounded-lg" style={{ background: "var(--c-pill-inactive)" }}>
+          <ChevronLeft size={14} style={{ color: "var(--c-sub)" }} />
+        </button>
+        <span className="text-xs font-bold" style={{ color: "var(--c-text)" }}>{monthLabel}</span>
+        <button onClick={() => setViewDate(new Date(year, month + 1))}
+          className="p-1.5 rounded-lg" style={{ background: "var(--c-pill-inactive)" }}
+          disabled={viewDate >= new Date(today.getFullYear(), today.getMonth())}>
+          <ChevronRight size={14} style={{ color: "var(--c-sub)" }} />
+        </button>
+      </div>
+
+      {/* Weekday headers */}
+      <div className="grid grid-cols-7 mb-1">
+        {["S","M","T","W","T","F","S"].map((d, i) => (
+          <div key={i} className="text-center text-[9px] font-bold" style={{ color: "var(--c-sub)" }}>{d}</div>
+        ))}
+      </div>
+
+      {/* Day cells */}
+      <div className="grid grid-cols-7 gap-1">
+        {cells.map((date, i) => {
+          if (!date) return <div key={`e${i}`} />;
+          const ds = date.toDateString();
+          const isToday = ds === todayStr;
+          const isFuture = date > today;
+          return (
+            <div key={ds} className="aspect-square flex items-center justify-center rounded-full text-[10px] font-semibold"
+              style={{
+                background: isFuture ? "transparent" : cellColor(date),
+                color: isToday ? "#fff" : "var(--c-sub)",
+                border: isToday ? "2px solid var(--c-accent)" : "none",
+                opacity: isFuture ? 0.3 : 1,
+              }}>
+              {date.getDate()}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Legend */}
+      <div className="flex flex-wrap gap-3 mt-3">
+        {[
+          { color: "var(--c-accent)", label: "Food + Exercise" },
+          { color: "var(--c-accent-bg)", label: "Exercise only" },
+          { color: "var(--c-warn-bg)", label: "Food only" },
+        ].map(({ color, label }) => (
+          <div key={label} className="flex items-center gap-1">
+            <div className="h-2.5 w-2.5 rounded-full" style={{ background: color }} />
+            <span className="text-[9px]" style={{ color: "var(--c-sub)" }}>{label}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ── Weekly bar chart ──────────────────────────────────────────────── */
+function WeeklyChart({ calorieTarget }) {
+  const days = [];
+  const today = new Date();
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(today);
+    d.setDate(d.getDate() - i);
+    const ds = d.toDateString();
+    const log = cache.getDailyLog(ds);
+    const cal = log.calories || 0;
+    const pct = calorieTarget > 0 ? cal / calorieTarget : 0;
+    const ratio = pct;
+    const color = ratio >= 0.9 && ratio <= 1.1 ? "#4CAF50"
+      : ratio >= 0.7 ? "var(--c-warn)"
+      : ratio > 0 ? "#FF6B6B"
+      : "var(--c-pill-inactive)";
+    days.push({
+      label: d.toLocaleDateString("en-GB", { weekday: "short" }),
+      cal,
+      pct: Math.min(ratio, 1.3),
+      color,
+      isToday: i === 0,
+    });
+  }
+
+  const maxBar = 80;
+  return (
+    <div>
+      <div className="flex items-end gap-1.5 justify-between" style={{ height: maxBar + 20 }}>
+        {days.map((d, i) => (
+          <div key={i} className="flex flex-col items-center flex-1 gap-1">
+            <div style={{ height: maxBar, display: "flex", alignItems: "flex-end" }}>
+              <div className="rounded-t-lg w-full transition-all"
+                style={{
+                  height: `${Math.max(d.pct * maxBar, d.cal > 0 ? 6 : 3)}px`,
+                  background: d.color,
+                  minWidth: 18,
+                  border: d.isToday ? `2px solid var(--c-accent)` : "none",
+                }} />
+            </div>
+            <span className="text-[9px] font-semibold" style={{ color: d.isToday ? "var(--c-accent)" : "var(--c-sub)" }}>{d.label}</span>
+          </div>
+        ))}
+      </div>
+      <div className="flex justify-between mt-1 text-[9px]" style={{ color: "var(--c-sub)" }}>
+        <span>0 kcal</span>
+        <span>{calorieTarget} kcal target</span>
+      </div>
+    </div>
+  );
+}
+
+/* ── Missed day check ─────────────────────────────────────────────── */
+function useMissedDays() {
+  const [missedDays, setMissedDays] = useState([]);
+  useEffect(() => {
+    const today = new Date();
+    const last7 = Array.from({ length: 7 }, (_, i) => {
+      const d = new Date(today);
+      d.setDate(d.getDate() - i - 1);
+      return d;
+    });
+    const missed = last7.filter(d => {
+      const ds = d.toDateString();
+      if (cache.isDaySkipped(ds)) return false;
+      const log = cache.getDailyLog(ds);
+      return (log.foods?.length || 0) === 0 && (log.doneExercises?.length || 0) === 0;
+    });
+    setMissedDays(missed);
+  }, []);
+  return missedDays;
 }
 
 export default function Profile() {
@@ -83,6 +250,10 @@ export default function Profile() {
   const stats = cache.getStats();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [progressTab, setProgressTab] = useState("week");
+  const { mode, cycle } = useTheme();
+  const ThemeIcon = THEME_ICONS[mode] || Sunset;
+  const missedDays = useMissedDays();
 
   if (!profile) { navigate("/onboarding", { replace: true }); return null; }
 
@@ -93,11 +264,29 @@ export default function Profile() {
   const goalList = Array.isArray(profile.goals) ? profile.goals : [profile.goal || ""].filter(Boolean);
   const planAge = cache.planAge();
 
-  // Projections
   const bmr = calcBMR(profile.weight, profile.height, profile.age, profile.sex);
   const tdee = calcTDEE(bmr, profile.activity);
   const targetCals = plan?.calories || calcTargetCalories(tdee, profile.goals);
-  const deficitPerDay = targetCals - tdee; // negative = deficit, positive = surplus
+  const deficitPerDay = targetCals - tdee;
+
+  const macroGoals = [
+    { label: "Protein", val: plan?.macros?.protein, color: "var(--c-accent)", pct: 35 },
+    { label: "Carbs",   val: plan?.macros?.carbs,   color: "var(--c-warn)", pct: 40 },
+    { label: "Fat",     val: plan?.macros?.fat,      color: "#FF6B6B", pct: 25 },
+  ];
+
+  // Weekly workout count
+  const today = new Date();
+  let weekWorkouts = 0;
+  let weekCalTotal = 0;
+  let weekLoggedDays = 0;
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(today); d.setDate(d.getDate() - i);
+    const log = cache.getDailyLog(d.toDateString());
+    if ((log.doneExercises?.length || 0) > 0) weekWorkouts++;
+    if (log.calories > 0) { weekCalTotal += log.calories; weekLoggedDays++; }
+  }
+  const avgCal = weekLoggedDays > 0 ? Math.round(weekCalTotal / weekLoggedDays) : 0;
 
   async function regenerate() {
     setLoading(true); setError("");
@@ -125,12 +314,6 @@ export default function Profile() {
 
   if (loading) return <PlanLoading />;
 
-  const macroGoals = [
-    { label: "Protein", val: plan?.macros?.protein, color: "var(--c-accent)", pct: 35 },
-    { label: "Carbs",   val: plan?.macros?.carbs,   color: "var(--c-warn)", pct: 40 },
-    { label: "Fat",     val: plan?.macros?.fat,      color: "#FF6B6B", pct: 25 },
-  ];
-
   return (
     <div className="min-h-screen pb-nav" style={{ background: "var(--c-bg)" }}>
       {/* Header */}
@@ -149,11 +332,41 @@ export default function Profile() {
               FREE
             </span>
           </div>
-          <REX state="idle" size="sm" />
+          {/* Theme toggle */}
+          <button onClick={cycle}
+            className="flex items-center gap-1 rounded-full px-2.5 py-1.5 text-xs font-semibold transition-all"
+            style={{ background: "var(--c-card)", border: "1px solid var(--c-border)", color: "var(--c-sub)" }}>
+            <ThemeIcon size={13} />
+            {THEME_LABELS[mode]}
+          </button>
         </div>
       </div>
 
       <div className="px-4 space-y-4 mt-4">
+
+        {/* Missed days banner */}
+        {missedDays.length > 0 && (
+          <div className="rounded-2xl p-3" style={{ background: "var(--c-warn-bg)", border: "1px solid var(--c-warn-border)" }}>
+            <p className="text-xs font-bold mb-2" style={{ color: "var(--c-warn)" }}>
+              ⚠️ You missed logging on {missedDays.length} day{missedDays.length > 1 ? "s" : ""}
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {missedDays.map(d => (
+                <div key={d.toDateString()} className="flex items-center gap-1.5 rounded-lg px-2 py-1"
+                  style={{ background: "var(--c-card)", border: "1px solid var(--c-warn-border)" }}>
+                  <span className="text-[11px] font-semibold" style={{ color: "var(--c-text)" }}>
+                    {d.toLocaleDateString("en-GB", { weekday: "short", day: "numeric" })}
+                  </span>
+                  <button onClick={() => navigate("/log")} className="text-[10px] font-bold px-1.5 py-0.5 rounded"
+                    style={{ background: "var(--c-warn)", color: "#fff" }}>Log</button>
+                  <button onClick={() => { cache.markDaySkipped(d.toDateString()); }}
+                    className="text-[10px] font-bold" style={{ color: "var(--c-sub)" }}>Skip</button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Stats */}
         <div className="grid grid-cols-3 gap-3">
           {[
@@ -191,7 +404,74 @@ export default function Profile() {
           <BMIBar bmi={plan?.bmi} />
         </div>
 
-        {/* Macros visual */}
+        {/* ── Progress section ──────────────────────────────────────── */}
+        <div className="rounded-2xl p-4 glass">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-bold" style={{ color: "var(--c-text)" }}>Progress</h3>
+            {/* Week / Month toggle */}
+            <div className="flex rounded-lg p-0.5" style={{ background: "var(--c-pill-inactive)" }}>
+              {["week", "month"].map((t) => (
+                <button key={t} onClick={() => setProgressTab(t)}
+                  className="rounded-md px-3 py-1 text-xs font-bold transition-all capitalize"
+                  style={{
+                    background: progressTab === t ? "var(--c-card)" : "transparent",
+                    color: progressTab === t ? "var(--c-accent)" : "var(--c-sub)",
+                    boxShadow: progressTab === t ? "0 1px 4px rgba(0,0,0,0.1)" : "none",
+                  }}>
+                  This {t}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {progressTab === "week" ? (
+            <div className="space-y-4">
+              <WeeklyChart calorieTarget={targetCals} />
+              <div className="flex gap-4 text-center">
+                <div className="flex-1">
+                  <p className="text-lg font-extrabold" style={{ color: "var(--c-accent)" }}>{weekWorkouts}</p>
+                  <p className="text-[10px]" style={{ color: "var(--c-sub)" }}>workouts this week</p>
+                </div>
+                <div className="flex-1">
+                  <p className="text-lg font-extrabold" style={{ color: "var(--c-warn)" }}>{avgCal || "—"}</p>
+                  <p className="text-[10px]" style={{ color: "var(--c-sub)" }}>avg kcal/day</p>
+                </div>
+                <div className="flex-1">
+                  <p className="text-lg font-extrabold" style={{ color: "#4ECDC4" }}>{streak}</p>
+                  <p className="text-[10px]" style={{ color: "var(--c-sub)" }}>day streak</p>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <p className="text-xs" style={{ color: "var(--c-sub)" }}>
+                Monthly summary · {new Date().toLocaleDateString("en-GB", { month: "long", year: "numeric" })}
+              </p>
+              <div className="grid grid-cols-2 gap-3">
+                {[
+                  { label: "Workouts logged", val: stats.workoutsLogged, color: "var(--c-accent)" },
+                  { label: "Day streak", val: `${streak}d`, color: "var(--c-warn)" },
+                  { label: "Avg kcal/day", val: avgCal || "—", color: "#FF6B6B" },
+                  { label: "Days logged", val: weekLoggedDays, color: "#4ECDC4" },
+                ].map(({ label, val, color }) => (
+                  <div key={label} className="rounded-xl p-3 text-center"
+                    style={{ background: "var(--c-input)", border: "1px solid var(--c-border)" }}>
+                    <p className="text-xl font-extrabold" style={{ color }}>{val}</p>
+                    <p className="text-[10px] mt-0.5" style={{ color: "var(--c-sub)" }}>{label}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Activity calendar */}
+        <div className="rounded-2xl p-4 glass">
+          <h3 className="font-bold mb-4" style={{ color: "var(--c-text)" }}>Activity Calendar</h3>
+          <ActivityCalendar />
+        </div>
+
+        {/* Macros */}
         {plan?.macros && (
           <div className="rounded-2xl p-4 glass">
             <h3 className="font-bold mb-3" style={{ color: "var(--c-text)" }}>Daily Macro Targets</h3>
@@ -210,8 +490,7 @@ export default function Profile() {
               ) : null)}
             </div>
             <p className="text-[10px] mt-2 text-center" style={{ color: "var(--c-sub)" }}>
-              TDEE: {tdee} kcal · Target: {targetCals} kcal ·{" "}
-              {Math.abs(deficitPerDay)} kcal {deficitPerDay < 0 ? "deficit" : "surplus"}
+              TDEE: {tdee} kcal · Target: {targetCals} kcal · {Math.abs(deficitPerDay)} kcal {deficitPerDay < 0 ? "deficit" : "surplus"}
             </p>
           </div>
         )}
@@ -223,10 +502,10 @@ export default function Profile() {
             Based on {Math.abs(deficitPerDay)} kcal {deficitPerDay < 0 ? "deficit" : "surplus"}/day
           </p>
           <div className="grid grid-cols-2 gap-2">
-            <ProjectionCard label="1 Week"   weeks={1}   currentWeight={profile.weight} deficitPerDay={deficitPerDay} />
-            <ProjectionCard label="1 Month"  weeks={4}   currentWeight={profile.weight} deficitPerDay={deficitPerDay} />
-            <ProjectionCard label="6 Months" weeks={26}  currentWeight={profile.weight} deficitPerDay={deficitPerDay} />
-            <ProjectionCard label="1 Year"   weeks={52}  currentWeight={profile.weight} deficitPerDay={deficitPerDay} />
+            <ProjectionCard label="1 Week"   weeks={1}  currentWeight={profile.weight} deficitPerDay={deficitPerDay} />
+            <ProjectionCard label="1 Month"  weeks={4}  currentWeight={profile.weight} deficitPerDay={deficitPerDay} />
+            <ProjectionCard label="6 Months" weeks={26} currentWeight={profile.weight} deficitPerDay={deficitPerDay} />
+            <ProjectionCard label="1 Year"   weeks={52} currentWeight={profile.weight} deficitPerDay={deficitPerDay} />
           </div>
           <p className="text-[9px] mt-2 text-center" style={{ color: "var(--c-sub)" }}>
             Estimates only · actual results depend on adherence and metabolism
@@ -273,7 +552,8 @@ export default function Profile() {
               { label: "Diet",          val: profile.diet },
               { label: "Fitness level", val: profile.fitnessLevel },
               { label: "Days/week",     val: `${profile.daysPerWeek} days` },
-            ].map(({ label, val }) => (
+              profile.ethnicity ? { label: "Background", val: profile.ethnicity } : null,
+            ].filter(Boolean).map(({ label, val }) => (
               <div key={label} className="flex justify-between text-sm">
                 <span style={{ color: "var(--c-sub)" }}>{label}</span>
                 <span className="font-semibold" style={{ color: "var(--c-text)" }}>{val}</span>

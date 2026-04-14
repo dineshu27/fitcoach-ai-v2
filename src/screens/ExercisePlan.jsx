@@ -1,6 +1,7 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Clock, Flame, Target, Moon } from "lucide-react";
+import { Clock, Flame, Target, Moon, Zap, ChevronRight } from "lucide-react";
 import ExerciseCard from "../components/ExerciseCard";
 import StretchCard from "../components/StretchCard";
 import REX from "../components/REX";
@@ -18,6 +19,7 @@ const TYPE_STYLE = {
 };
 
 export default function ExercisePlan() {
+  const navigate = useNavigate();
   const plan = cache.getPlan();
   const profile = cache.getProfile();
   const weekLen = plan?.weekPlan?.length || 7;
@@ -53,6 +55,47 @@ export default function ExercisePlan() {
           )}
         </div>
       </div>
+
+      {/* ── Today's Pick ────────────────────────────────────────── */}
+      {(() => {
+        const todayW = plan.weekPlan?.[todayIdx]?.workout;
+        const picks = todayW?.exercises?.slice(0, 2) || [];
+        if (!picks.length || todayW?.type === "Rest") return null;
+        return (
+          <div className="px-4 mt-4">
+            <div className="rounded-2xl overflow-hidden"
+              style={{
+                background: "linear-gradient(135deg, rgba(124,109,255,0.15), rgba(124,109,255,0.06))",
+                border: "1px solid var(--c-border-bright)",
+              }}>
+              <div className="flex items-center gap-2 px-4 pt-3 pb-2" style={{ borderBottom: "1px solid var(--c-border)" }}>
+                <Zap size={14} style={{ color: "var(--c-accent)" }} />
+                <span className="text-xs font-bold uppercase tracking-wide" style={{ color: "var(--c-accent)" }}>Today's Pick</span>
+                <span className="ml-auto text-[10px]" style={{ color: "var(--c-sub)" }}>{todayW?.focus}</span>
+              </div>
+              <div className="px-4 py-3 space-y-2">
+                {picks.map((ex) => (
+                  <div key={ex.name} className="flex items-center justify-between rounded-xl px-3 py-2"
+                    style={{ background: "var(--c-card)", border: "1px solid var(--c-border)" }}>
+                    <div>
+                      <p className="text-sm font-bold" style={{ color: "var(--c-text)" }}>{ex.name}</p>
+                      <p className="text-[10px]" style={{ color: "var(--c-sub)" }}>
+                        {ex.sets} × {ex.reps || ex.duration}{ex.muscleGroup ? ` · ${ex.muscleGroup}` : ""}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => navigate("/log", { state: { preloadExercise: ex } })}
+                      className="rounded-lg px-2.5 py-1 text-xs font-bold transition-all active:scale-95"
+                      style={{ background: "var(--c-accent)", color: "#fff" }}>
+                      + Log
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Day tabs */}
       <div className="flex gap-2 overflow-x-auto scrollbar-hide px-4 mt-4 pb-1">

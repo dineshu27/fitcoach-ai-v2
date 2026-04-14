@@ -1,7 +1,6 @@
 import { useLocation, useNavigate } from "react-router-dom";
-import { Home, ClipboardList, Dumbbell, MessageCircle, User, Sun, Moon, Sunset } from "lucide-react";
+import { Home, ClipboardList, Dumbbell, MessageCircle, User } from "lucide-react";
 import { motion } from "framer-motion";
-import { useTheme } from "../lib/theme";
 
 const TABS = [
   { path: "/dashboard", label: "Home",    Icon: Home },
@@ -11,14 +10,9 @@ const TABS = [
   { path: "/profile",   label: "Profile", Icon: User },
 ];
 
-const THEME_ICONS = { auto: Sunset, light: Sun, dark: Moon };
-const THEME_LABELS = { auto: "Auto", light: "Light", dark: "Dark" };
-
 export default function BottomNav() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { mode, cycle } = useTheme();
-  const ThemeIcon = THEME_ICONS[mode] || Sunset;
 
   return (
     <nav
@@ -30,18 +24,6 @@ export default function BottomNav() {
         paddingBottom: "env(safe-area-inset-bottom)",
       }}
     >
-      {/* Theme toggle strip */}
-      <div className="flex justify-end px-4 pt-1.5">
-        <button
-          onClick={cycle}
-          className="flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10px] font-semibold transition-all"
-          style={{ background: "var(--c-accent-bg)", border: "1px solid var(--c-border)", color: "var(--c-sub)" }}
-        >
-          <ThemeIcon size={10} />
-          {THEME_LABELS[mode]}
-        </button>
-      </div>
-
       <div className="flex items-center justify-around px-2 py-1">
         {TABS.map(({ path, label, Icon }) => {
           const active = location.pathname === path;
@@ -54,7 +36,7 @@ export default function BottomNav() {
               {active && (
                 <motion.div
                   layoutId="nav-indicator"
-                  className="absolute -top-0.5 left-1/2 -translate-x-1/2 h-0.5 w-8 rounded-full"
+                  className="absolute -top-0.5 left-1/2 -translate-x-1/2 h-[3px] w-10 rounded-full"
                   style={{ background: "var(--c-accent)", boxShadow: "0 0 8px var(--c-accent)" }}
                 />
               )}

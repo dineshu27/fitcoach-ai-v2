@@ -310,6 +310,26 @@ Rules:
   return validatePlan(parsed);
 }
 
+export async function parseAutoLog(text) {
+  const system = `You are a nutrition and fitness data extractor. Extract food items and exercises from natural language text.
+Return ONLY valid JSON, no explanation. Format:
+{
+  "foods": [{"name":"rice","quantity":150,"unit":"g"}],
+  "exercises": [{"name":"bench press","sets":3,"reps":10,"weight":60,"weightUnit":"kg"}],
+  "water": 500
+}
+For water, convert glasses/cups to ml (1 glass = 250ml). If quantity not mentioned for food, use typical serving size. If sets not mentioned for exercise, assume 3 sets. If no water mentioned, omit the field.`;
+  const safeText = sanitizeInput(text, 400);
+  const raw = await claudeCall(
+    [{ role: "user", content: `Extract nutrition and exercise data from: "${safeText}"` }],
+    system, 600
+  );
+  let cleaned = raw.replace(/```json\s*/g, "").replace(/```\s*/g, "").trim();
+  const s = cleaned.indexOf("{"), e = cleaned.lastIndexOf("}");
+  if (s !== -1 && e !== -1) cleaned = cleaned.slice(s, e + 1);
+  return JSON.parse(cleanJson(cleaned));
+}
+
 export async function rexChat(messages, profile, plan) {
   const condList = Array.isArray(profile.conditions) ? profile.conditions.filter((c) => c !== "None") : [];
   const goalStr = Array.isArray(profile.goals) ? profile.goals.join(", ") : profile.goal || "General fitness";
@@ -333,7 +353,16 @@ Your client:
 - Macros: ${plan?.macros?.protein || 0}g protein, ${plan?.macros?.carbs || 0}g carbs, ${plan?.macros?.fat || 0}g fat
 
 Personality: Energetic, warm, direct. Occasional robot/gym humour (keep it light). Never preachy or condescending.
-Rules: UK English always. Use £ not $. Max 3-4 sentences unless specifically asked for more detail. Plain text only — no markdown or bullet points. Medical questions → suggest seeing a GP.`;
+Rules: UK English always. Use £ not $. Max 3-4 sentences unless specifically asked for more detail. Medical questions → suggest seeing a GP.
+
+When a user wants to log food, log exercise, or update their calorie target, respond in this exact format:
+RESPONSE: [your conversational reply here]
+ACTION: {"action":"log_food","items":[{"name":"...","quantity":X,"unit":"g"}]}
+or ACTION: {"action":"log_exercise","items":[{"name":"...","sets":X,"reps":X,"weight":X}]}
+or ACTION: {"action":"update_calories","calories":X}
+or ACTION: null
+For normal chat (no action needed), format is: RESPONSE: [reply]\nACTION: null
+Always include both RESPONSE and ACTION lines.`;
 
   return await claudeCall(safeMessages, system, 1000);
 }

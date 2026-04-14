@@ -159,8 +159,33 @@ export const cache = {
     safeSet("fc_daily_log", Object.fromEntries(dates.map((d) => [d, all[d]])));
   },
 
+  // General daily log access (by date string) — reads same fc_daily_log store
+  getDailyLog(dateStr) {
+    const all = safeGet("fc_daily_log") || {};
+    return all[dateStr] || { calories: 0, water: 0, foods: [], protein: 0, carbs: 0, fat: 0 };
+  },
+  setDailyLog(dateStr, data) {
+    const all = safeGet("fc_daily_log") || {};
+    all[dateStr] = data;
+    const keys = Object.keys(all).sort().slice(-60);
+    safeSet("fc_daily_log", Object.fromEntries(keys.map(k => [k, all[k]])));
+  },
+  todayKey() { return new Date().toDateString(); },
+  updateTodayLog(updates) {
+    const current = this.getDailyLog(this.todayKey());
+    this.setDailyLog(this.todayKey(), { ...current, ...updates });
+  },
+  markDaySkipped(dateStr) {
+    const all = safeGet("fc_skipped_days") || {};
+    all[dateStr] = true;
+    safeSet("fc_skipped_days", all);
+  },
+  isDaySkipped(dateStr) {
+    return !!(safeGet("fc_skipped_days") || {})[dateStr];
+  },
+
   clearAll() {
-    ["fc_plan", "fc_profile", "fc_chat", "fc_chat_count", "fc_stats", "fc_ex_log", "fc_daily_log"].forEach((k) =>
+    ["fc_plan", "fc_profile", "fc_chat", "fc_chat_count", "fc_stats", "fc_ex_log", "fc_daily_log", "fc_skipped_days"].forEach((k) =>
       localStorage.removeItem(k)
     );
   },

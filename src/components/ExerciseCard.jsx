@@ -5,15 +5,15 @@ import VideoModal, { getVideoId } from "./VideoModal";
 import { cache } from "../lib/cache";
 
 const MUSCLE_COLORS = {
-  chest: "rgba(255,107,107,0.2)", back: "rgba(78,205,196,0.2)", shoulders: "rgba(var(--c-accent-rgb),0.2)",
-  biceps: "rgba(255,182,193,0.2)", triceps: "rgba(255,165,0,0.2)", quads: "rgba(78,205,196,0.2)",
-  hamstrings: "rgba(78,205,196,0.15)", glutes: "rgba(144,238,144,0.2)", core: "rgba(245,158,11,0.15)",
-  cardio: "rgba(var(--c-accent-rgb),0.15)",
+  chest: "var(--c-accent-bg)", back: "var(--c-cool-bg)", shoulders: "var(--c-accent-bg)",
+  biceps: "var(--c-accent-bg)", triceps: "var(--c-warn-bg)", quads: "var(--c-cool-bg)",
+  hamstrings: "var(--c-cool-bg)", glutes: "var(--c-warn-bg)", core: "var(--c-warn-bg)",
+  cardio: "var(--c-accent-bg)",
 };
 const MUSCLE_TEXT = {
-  chest: "#FF6B6B", back: "#0D7A76", shoulders: "var(--c-accent)", biceps: "#C2185B",
-  triceps: "#E67E00", quads: "#0D7A76", hamstrings: "#0D7A76", glutes: "#2E7D32",
-  core: "#F59E0B", cardio: "#8880FF",
+  chest: "var(--c-accent)", back: "var(--c-cool)", shoulders: "var(--c-accent)", biceps: "var(--c-accent)",
+  triceps: "var(--c-warn)", quads: "var(--c-cool)", hamstrings: "var(--c-cool)", glutes: "var(--c-warn)",
+  core: "var(--c-warn)", cardio: "var(--c-accent)",
 };
 
 function getMuscleKey(mg = "") {

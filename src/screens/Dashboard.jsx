@@ -195,11 +195,9 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              {/* REX — larger, anchored to bottom */}
-              <div style={{ position: "relative", flexShrink: 0, width: 100, height: 140, overflow: "hidden" }}>
-                <div style={{ position: "absolute", bottom: 0, left: "50%", transformOrigin: "bottom center", transform: "translateX(-50%) scale(0.65)" }}>
-                  <REX state="idle" />
-                </div>
+              {/* REX orb */}
+              <div style={{ flexShrink: 0, width: 80, height: 80, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <REX state="idle" size="sm" />
               </div>
             </div>
 
@@ -346,11 +344,9 @@ export default function Dashboard() {
               border: "1px solid var(--c-border-bright)",
               boxShadow: "var(--c-card-shadow)",
             }}>
-            <div className="flex items-center gap-3 p-4" style={{ minHeight: 100 }}>
-              <div style={{ position: "relative", flexShrink: 0, width: 80, height: 120, overflow: "hidden" }}>
-                <div style={{ position: "absolute", bottom: 0, left: "50%", transformOrigin: "bottom center", transform: "translateX(-50%) scale(0.55)" }}>
-                  <REX state="idle" />
-                </div>
+            <div className="flex items-center gap-3 p-4" style={{ minHeight: 90 }}>
+              <div style={{ flexShrink: 0, width: 64, height: 64, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <REX state="idle" size="sm" />
               </div>
               <div className="flex-1">
                 <p className="text-xs font-semibold uppercase tracking-wide mb-1" style={{ color: "var(--c-accent)" }}>Your AI Coach</p>

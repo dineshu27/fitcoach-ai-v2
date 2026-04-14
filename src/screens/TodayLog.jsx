@@ -1,8 +1,9 @@
 import { useState, useRef } from "react";
+import { useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Search, Plus, Minus, Flame, Droplets, X, ChevronDown,
-  CheckCircle2, Utensils, Dumbbell, RefreshCw, Zap, Sparkles,
+  CheckCircle2, Utensils, Dumbbell, RefreshCw, Zap, Sparkles, Edit2, Check,
 } from "lucide-react";
 import { cache } from "../lib/cache";
 import { parseAutoLog } from "../lib/api";
@@ -387,26 +388,74 @@ function EthnicitySuggestions({ ethnicity, onChipTap }) {
   );
 }
 
-/* ── Exercise Item ──────────────────────────────────────────────────── */
+/* ── Exercise Item (with inline edit) ──────────────────────────────── */
 function ExerciseItem({ name, detail, done, onToggle }) {
+  const [editing, setEditing] = useState(false);
+  const [weight, setWeight] = useState("");
+  const [reps,   setReps]   = useState("");
+  const [saved,  setSaved]  = useState(false);
+
+  function saveEdit() {
+    const note = [weight ? `${weight}kg` : "", reps ? `${reps} reps` : ""].filter(Boolean).join(" · ");
+    if (note) cache.logExerciseSet(name, [{ set: 1, weight, reps: parseInt(reps) || 0, done: true, note }]);
+    setSaved(true);
+    setEditing(false);
+    setTimeout(() => setSaved(false), 2000);
+  }
+
   return (
-    <div className="flex items-center gap-3 rounded-xl px-3 py-2.5 transition-all"
+    <div className="rounded-xl overflow-hidden transition-all"
       style={{
-        background: done ? "rgba(78,205,196,0.08)" : "var(--c-input)",
-        border: done ? "1px solid rgba(78,205,196,0.3)" : "1px solid var(--c-border)",
+        background: done ? "rgba(52,211,153,0.07)" : "var(--c-input)",
+        border: done ? "1px solid rgba(52,211,153,0.3)" : "1px solid var(--c-border)",
       }}>
-      <button onClick={onToggle}
-        className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full transition-all"
-        style={{
-          background: done ? "rgba(78,205,196,0.2)" : "var(--c-accent-bg)",
-          border: done ? "1px solid rgba(78,205,196,0.5)" : "1px solid var(--c-border-bright)",
-        }}>
-        <CheckCircle2 size={14} style={{ color: done ? "#4ECDC4" : "var(--c-sub)" }} />
-      </button>
-      <div className="flex-1 min-w-0">
-        <p className="text-sm font-semibold truncate" style={{ color: done ? "var(--c-sub)" : "var(--c-text)", textDecoration: done ? "line-through" : "none" }}>{name}</p>
-        {detail && <p className="text-[10px]" style={{ color: "var(--c-sub)" }}>{detail}</p>}
+      <div className="flex items-center gap-3 px-3 py-2.5">
+        <button onClick={onToggle}
+          className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full transition-all"
+          style={{
+            background: done ? "rgba(52,211,153,0.2)" : "var(--c-accent-bg)",
+            border: done ? "1px solid rgba(52,211,153,0.5)" : "1px solid var(--c-border-bright)",
+          }}>
+          <CheckCircle2 size={14} style={{ color: done ? "#34D399" : "var(--c-sub)" }} />
+        </button>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-semibold truncate"
+            style={{ color: done ? "var(--c-sub)" : "var(--c-text)", textDecoration: done ? "line-through" : "none" }}>
+            {name}
+          </p>
+          {(detail || saved) && (
+            <p className="text-[10px]" style={{ color: saved ? "#34D399" : "var(--c-sub)" }}>
+              {saved ? "Saved!" : detail}
+            </p>
+          )}
+        </div>
+        <button onClick={() => setEditing(e => !e)}
+          className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-lg transition-all"
+          style={{ background: editing ? "var(--c-accent-bg)" : "transparent", border: editing ? "1px solid var(--c-border)" : "none" }}>
+          <Edit2 size={12} style={{ color: editing ? "var(--c-accent)" : "var(--c-sub)" }} />
+        </button>
       </div>
+
+      {/* Inline edit panel */}
+      {editing && (
+        <motion.div initial={{ height: 0 }} animate={{ height: "auto" }} className="overflow-hidden">
+          <div className="flex items-center gap-2 px-3 pb-2.5">
+            <input type="number" placeholder="Weight (kg)" value={weight}
+              onChange={e => setWeight(e.target.value)} min="0"
+              className="flex-1 rounded-lg px-2.5 py-1.5 text-xs text-center outline-none"
+              style={{ background: "var(--c-card)", border: "1px solid var(--c-border)", color: "var(--c-text)" }} />
+            <input type="number" placeholder="Reps" value={reps}
+              onChange={e => setReps(e.target.value)} min="1"
+              className="flex-1 rounded-lg px-2.5 py-1.5 text-xs text-center outline-none"
+              style={{ background: "var(--c-card)", border: "1px solid var(--c-border)", color: "var(--c-text)" }} />
+            <button onClick={saveEdit}
+              className="flex h-7 w-7 items-center justify-center rounded-lg transition-all active:scale-90"
+              style={{ background: "var(--c-accent)", flexShrink: 0 }}>
+              <Check size={12} color="#fff" />
+            </button>
+          </div>
+        </motion.div>
+      )}
     </div>
   );
 }
@@ -653,11 +702,13 @@ function AutoLog({ onLogComplete }) {
 
 /* ── TodayLog Screen ────────────────────────────────────────────────── */
 export default function TodayLog({ preloadExercise }) {
+  const location = useLocation();
   const plan = cache.getPlan();
   const profile = cache.getProfile();
   const [log, setLog] = useState(() => cache.getTodayLog());
-  const [mode, setMode] = useState("auto");
-  const [foodSearchPrefill, setFoodSearchPrefill] = useState("");
+  // Switch to manual mode if a food is preloaded from DietPlan
+  const [mode, setMode] = useState(location.state?.preloadFood ? "manual" : "auto");
+  const [foodSearchPrefill, setFoodSearchPrefill] = useState(location.state?.preloadFood || "");
 
   const waterLitres = parseFloat(String(plan?.water || "2.5").replace("L", "")) || 2.5;
   const waterGlassTarget = Math.round(waterLitres * 4);

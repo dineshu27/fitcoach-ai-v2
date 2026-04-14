@@ -2,53 +2,53 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ── THEME VARIABLES ─────────────────────────────────────────── */
+/* ── PREMIUM THEME VARIABLES ─────────────────────────────────── */
 :root, [data-theme="dark"] {
-  --c-bg:          #0E0F18;
-  --c-surface:     #16172A;
-  --c-card:        #1E1F30;
-  --c-text:        #EAEAFF;
-  --c-sub:         #8080A8;
-  --c-border:      rgba(124,109,255,0.16);
-  --c-border-bright: rgba(124,109,255,0.38);
-  --c-accent:      #7C6DFF;
-  --c-accent-rgb:  124,109,255;
-  --c-accent-bg:   rgba(124,109,255,0.14);
-  --c-nav:         #16172A;
-  --c-input:       #1E1F30;
+  --c-bg:            #090A14;
+  --c-surface:       #10112A;
+  --c-card:          #181928;
+  --c-text:          #ECEEFF;
+  --c-sub:           #7879A8;
+  --c-border:        rgba(110,90,255,0.14);
+  --c-border-bright: rgba(130,110,255,0.32);
+  --c-accent:        #8A7FFF;
+  --c-accent-rgb:    138,127,255;
+  --c-accent-bg:     rgba(138,127,255,0.12);
+  --c-nav:           rgba(9,10,20,0.94);
+  --c-input:         #181928;
   --c-pill-inactive: rgba(255,255,255,0.07);
-  --c-card-shadow: none;
+  --c-card-shadow:   0 4px 24px rgba(0,0,0,0.5);
   /* Semantic */
-  --c-warn:        #FFE66D;
-  --c-warn-bg:     rgba(255,230,109,0.08);
-  --c-warn-border: rgba(255,230,109,0.22);
-  --c-cool:        #4ECDC4;
-  --c-cool-bg:     rgba(78,205,196,0.08);
-  --c-cool-border: rgba(78,205,196,0.22);
+  --c-warn:          #FCD34D;
+  --c-warn-bg:       rgba(252,211,77,0.08);
+  --c-warn-border:   rgba(252,211,77,0.22);
+  --c-cool:          #34D399;
+  --c-cool-bg:       rgba(52,211,153,0.08);
+  --c-cool-border:   rgba(52,211,153,0.22);
 }
 
 [data-theme="light"] {
-  --c-bg:          #F0F1F9;
-  --c-surface:     #FFFFFF;
-  --c-card:        #FFFFFF;
-  --c-text:        #16172A;
-  --c-sub:         #6366A0;
-  --c-border:      rgba(80,70,229,0.13);
-  --c-border-bright: rgba(80,70,229,0.35);
-  --c-accent:      #4F46E5;
-  --c-accent-rgb:  79,70,229;
-  --c-accent-bg:   rgba(79,70,229,0.09);
-  --c-nav:         #FFFFFF;
-  --c-input:       #F0F1F9;
-  --c-pill-inactive: rgba(0,0,0,0.06);
-  --c-card-shadow: 0 1px 4px rgba(0,0,0,0.06), 0 0 0 1px rgba(80,70,229,0.08);
-  /* Semantic — darker versions for readability on white */
-  --c-warn:        #92670A;
-  --c-warn-bg:     rgba(146,103,10,0.07);
-  --c-warn-border: rgba(146,103,10,0.22);
-  --c-cool:        #0D7A76;
-  --c-cool-bg:     rgba(13,122,118,0.07);
-  --c-cool-border: rgba(13,122,118,0.22);
+  --c-bg:            #F4F5FF;
+  --c-surface:       #FFFFFF;
+  --c-card:          #FFFFFF;
+  --c-text:          #0D0E1C;
+  --c-sub:           #5B5C80;
+  --c-border:        rgba(80,70,235,0.1);
+  --c-border-bright: rgba(80,70,235,0.28);
+  --c-accent:        #5048E5;
+  --c-accent-rgb:    80,72,229;
+  --c-accent-bg:     rgba(80,72,229,0.08);
+  --c-nav:           rgba(255,255,255,0.97);
+  --c-input:         #F4F5FF;
+  --c-pill-inactive: rgba(13,14,28,0.06);
+  --c-card-shadow:   0 1px 3px rgba(0,0,0,0.04), 0 4px 20px rgba(80,72,229,0.09);
+  /* Semantic — readable on white */
+  --c-warn:          #B45309;
+  --c-warn-bg:       rgba(180,83,9,0.06);
+  --c-warn-border:   rgba(180,83,9,0.22);
+  --c-cool:          #0F766E;
+  --c-cool-bg:       rgba(15,118,110,0.06);
+  --c-cool-border:   rgba(15,118,110,0.22);
 }
 
 @layer base {
@@ -61,18 +61,18 @@
     color: var(--c-text);
     -webkit-font-smoothing: antialiased;
     overscroll-behavior: none;
-    transition: background-color 0.25s, color 0.25s;
+    transition: background-color 0.3s, color 0.3s;
   }
 
   #root { min-height: 100svh; }
 }
 
 @layer utilities {
-  .safe-top  { padding-top:    env(safe-area-inset-top); }
+  .safe-top   { padding-top:    env(safe-area-inset-top); }
   .safe-bottom{ padding-bottom: env(safe-area-inset-bottom); }
-  .pb-nav    { padding-bottom: calc(env(safe-area-inset-bottom) + 72px); }
+  .pb-nav     { padding-bottom: calc(env(safe-area-inset-bottom) + 76px); }
 
-  /* Theme-aware card */
+  /* Premium card */
   .glass {
     background: var(--c-card);
     border: 1px solid var(--c-border);
@@ -86,23 +86,18 @@
     box-shadow: var(--c-card-shadow);
   }
 
-  /* Accent ring border — NO pseudo-element, NO z-index tricks */
+  /* Accent ring border */
   .gradient-border {
     border-radius: 16px;
-    box-shadow:
-      0 0 0 1.5px var(--c-accent),
-      0 4px 20px rgba(var(--c-accent-rgb), 0.18);
+    box-shadow: 0 0 0 1.5px var(--c-accent), 0 4px 24px rgba(var(--c-accent-rgb), 0.2);
   }
   [data-theme="light"] .gradient-border {
-    box-shadow:
-      0 0 0 2px var(--c-accent),
-      0 2px 12px rgba(var(--c-accent-rgb), 0.14),
-      var(--c-card-shadow);
+    box-shadow: 0 0 0 2px var(--c-accent), 0 2px 12px rgba(var(--c-accent-rgb), 0.16), var(--c-card-shadow);
   }
 
   /* Glow — dark only */
-  .neon { box-shadow: 0 0 18px rgba(var(--c-accent-rgb), 0.35); }
-  .neon-lg { box-shadow: 0 0 36px rgba(var(--c-accent-rgb), 0.45); }
+  .neon    { box-shadow: 0 0 20px rgba(var(--c-accent-rgb), 0.4); }
+  .neon-lg { box-shadow: 0 0 40px rgba(var(--c-accent-rgb), 0.5); }
   [data-theme="light"] .neon,
   [data-theme="light"] .neon-lg { box-shadow: none; }
 
@@ -116,8 +111,8 @@
     content: '';
     position: absolute; inset: 0;
     background-image:
-      linear-gradient(rgba(var(--c-accent-rgb),0.05) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(var(--c-accent-rgb),0.05) 1px, transparent 1px);
+      linear-gradient(rgba(var(--c-accent-rgb),0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(var(--c-accent-rgb),0.04) 1px, transparent 1px);
     background-size: 40px 40px;
     pointer-events: none;
   }
@@ -133,22 +128,24 @@
     border: none;
     cursor: pointer;
   }
-  .btn-primary:hover  { opacity: 0.9; transform: translateY(-1px); }
-  .btn-primary:active { transform: scale(0.97); }
+  .btn-primary:hover   { opacity: 0.9; transform: translateY(-1px); }
+  .btn-primary:active  { transform: scale(0.97); }
   .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
 
   /* Progress bar */
   .progress-track {
-    height: 6px;
-    border-radius: 9999px;
-    background: var(--c-pill-inactive);
-    overflow: hidden;
+    height: 6px; border-radius: 9999px;
+    background: var(--c-pill-inactive); overflow: hidden;
   }
   .progress-fill {
-    height: 100%;
-    border-radius: 9999px;
-    transition: width 0.4s ease;
+    height: 100%; border-radius: 9999px; transition: width 0.4s ease;
+  }
+
+  /* Premium section header accent */
+  .section-header {
+    border-left: 3px solid var(--c-accent);
+    padding-left: 10px;
+    font-weight: 700;
+    color: var(--c-text);
   }
 }
-
-/* ── FiTAi (EVA) character — pure SVG, no CSS classes needed ─── */

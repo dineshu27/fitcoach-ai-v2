@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Send } from "lucide-react";
+import { Send, ArrowLeft } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import REX from "../components/REX";
 import ChatBubble, { TypingIndicator } from "../components/ChatBubble";
 import { cache } from "../lib/cache";
@@ -71,6 +72,7 @@ function executeAction(action) {
 }
 
 export default function Coach() {
+  const navigate = useNavigate();
   const profile = cache.getProfile();
   const plan = cache.getPlan();
   const [messages, setMessages] = useState([]);
@@ -132,13 +134,17 @@ export default function Coach() {
     <div className="flex flex-col coach-grid" style={{ height: "100svh", background: "var(--c-bg)" }}>
 
       {/* ── Header ──────────────────────────────────────────────────── */}
-      <div className="flex-shrink-0 flex items-center gap-3 px-4 pt-safe pt-3 pb-3"
-        style={{ borderBottom: "1px solid var(--c-border)", background: "var(--c-nav)", backdropFilter: "blur(16px)" }}>
-        {/* Mini REX */}
-        <div style={{ position: "relative", flexShrink: 0, width: 52, height: 70, overflow: "hidden" }}>
-          <div style={{ position: "absolute", bottom: 0, left: "50%", transformOrigin: "bottom center", transform: "translateX(-50%) scale(0.40)" }}>
-            <REX state={fitaiState} />
-          </div>
+      <div className="flex-shrink-0 flex items-center gap-2 px-4 pt-safe pt-3 pb-3"
+        style={{ borderBottom: "1px solid var(--c-border)", background: "var(--c-nav)", backdropFilter: "blur(20px)" }}>
+        {/* Back button */}
+        <button onClick={() => navigate(-1)}
+          className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl transition-all active:scale-90"
+          style={{ background: "var(--c-accent-bg)", border: "1px solid var(--c-border)" }}>
+          <ArrowLeft size={16} style={{ color: "var(--c-accent)" }} />
+        </button>
+        {/* Mini REX orb */}
+        <div style={{ flexShrink: 0, width: 40, height: 40, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <REX state={fitaiState} size="xs" />
         </div>
         <div className="flex-1">
           <p className="font-bold" style={{ color: "var(--c-text)" }}>FiTAi</p>

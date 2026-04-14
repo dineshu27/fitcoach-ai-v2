@@ -172,8 +172,9 @@ export function getVideoId(exerciseName) {
 
 export default function VideoModal({ exercise, onClose }) {
   const videoId = getVideoId(exercise?.name);
+  const searchQuery = encodeURIComponent((exercise?.name || "") + " exercise tutorial proper form");
+  const youtubeSearchUrl = `https://www.youtube.com/results?search_query=${searchQuery}`;
 
-  // Close on Escape key
   useEffect(() => {
     const handler = (e) => { if (e.key === "Escape") onClose(); };
     window.addEventListener("keydown", handler);
@@ -184,7 +185,7 @@ export default function VideoModal({ exercise, onClose }) {
     <AnimatePresence>
       <motion.div
         className="fixed inset-0 z-50 flex flex-col items-center justify-center px-4"
-        style={{ background: "rgba(0,0,0,0.85)", backdropFilter: "blur(8px)" }}
+        style={{ background: "rgba(0,0,0,0.88)", backdropFilter: "blur(10px)" }}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
@@ -192,30 +193,28 @@ export default function VideoModal({ exercise, onClose }) {
       >
         <motion.div
           className="w-full max-w-[420px] rounded-2xl overflow-hidden"
-          style={{ background: "var(--c-surface)", border: "1px solid rgba(var(--c-accent-rgb),0.3)" }}
+          style={{ background: "var(--c-card)", border: "1px solid var(--c-border-bright)", boxShadow: "0 20px 60px rgba(0,0,0,0.5)" }}
           initial={{ scale: 0.9, y: 30 }}
           animate={{ scale: 1, y: 0 }}
           exit={{ scale: 0.9, y: 30 }}
-          transition={{ type: "spring", damping: 20 }}
+          transition={{ type: "spring", damping: 22 }}
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3"
-            style={{ borderBottom: "1px solid rgba(var(--c-accent-rgb),0.15)" }}>
+            style={{ borderBottom: "1px solid var(--c-border)" }}>
             <div>
               <p className="font-bold text-sm" style={{ color: "var(--c-text)" }}>{exercise?.name}</p>
-              <p className="text-xs" style={{ color: "var(--c-sub)" }}>
-                {videoId ? "Strength training tutorial" : "Search on YouTube"}
-              </p>
+              <p className="text-[11px]" style={{ color: "var(--c-sub)" }}>Exercise tutorial</p>
             </div>
-            <button onClick={onClose} className="rounded-full p-1.5"
-              style={{ background: "rgba(var(--c-accent-rgb),0.15)" }}>
+            <button onClick={onClose} className="rounded-xl p-1.5"
+              style={{ background: "var(--c-pill-inactive)" }}>
               <X size={16} style={{ color: "var(--c-sub)" }} />
             </button>
           </div>
 
-          {/* Video */}
-          {videoId ? (
+          {/* Embedded video (if matched) */}
+          {videoId && (
             <div style={{ position: "relative", paddingBottom: "56.25%", background: "#000" }}>
               <iframe
                 src={`https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1`}
@@ -225,22 +224,30 @@ export default function VideoModal({ exercise, onClose }) {
                 style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", border: "none" }}
               />
             </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center py-10 px-6 text-center gap-4">
-              <p className="text-sm" style={{ color: "var(--c-sub)" }}>
-                No in-app tutorial available for this exercise yet.
-              </p>
-              <a
-                href={`https://www.youtube.com/results?search_query=${encodeURIComponent(exercise?.name + " strength training tutorial")}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="rounded-xl px-4 py-2.5 text-sm font-bold text-white"
-                style={{ background: "#FF0000" }}
-              >
-                Search on YouTube
-              </a>
-            </div>
           )}
+
+          {/* Search on YouTube — always shown */}
+          <div className={`flex flex-col items-center gap-3 px-5 ${videoId ? "pt-3 pb-4" : "py-8"}`}>
+            {!videoId && (
+              <p className="text-sm text-center" style={{ color: "var(--c-sub)" }}>
+                Tap below to find the best tutorial for this exercise on YouTube.
+              </p>
+            )}
+            <a
+              href={youtubeSearchUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-bold text-white transition-all active:scale-95"
+              style={{ background: "#FF0000", boxShadow: "0 4px 16px rgba(255,0,0,0.35)" }}
+              onClick={onClose}
+            >
+              <svg width="18" height="14" viewBox="0 0 18 14" fill="none">
+                <path d="M17.64 2.18A2.25 2.25 0 0 0 16.07.59C14.66 0 9 0 9 0S3.34 0 1.93.59A2.25 2.25 0 0 0 .36 2.18 24 24 0 0 0 0 7a24 24 0 0 0 .36 4.82A2.25 2.25 0 0 0 1.93 13.4C3.34 14 9 14 9 14s5.66 0 7.07-.59a2.25 2.25 0 0 0 1.57-1.59A24 24 0 0 0 18 7a24 24 0 0 0-.36-4.82Z" fill="#fff" />
+                <path d="M7.2 10l4.8-3L7.2 4v6Z" fill="#FF0000" />
+              </svg>
+              Search "{exercise?.name}" on YouTube
+            </a>
+          </div>
         </motion.div>
       </motion.div>
     </AnimatePresence>

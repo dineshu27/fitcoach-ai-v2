@@ -100,11 +100,11 @@ function ActivityCalendar() {
     const ds = date.toDateString();
     const log = cache.getDailyLog(ds);
     const hasFood = (log.foods?.length || 0) > 0;
-    const hasEx = (log.doneExercises?.length || 0) > 0;
-    if (hasFood && hasEx) return "var(--c-accent)";
-    if (hasEx) return "var(--c-accent-bg)";
-    if (hasFood) return "var(--c-warn-bg)";
-    if (cache.isDaySkipped(ds)) return "rgba(128,128,170,0.15)";
+    const hasEx   = (log.doneExercises?.length || 0) > 0;
+    if (hasFood && hasEx) return "#22C55E";   // green — fully logged
+    if (hasFood)  return "#4ADE80";           // lighter green — food only
+    if (hasEx)    return "#86EFAC";           // even lighter — exercise only
+    if (cache.isDaySkipped(ds)) return "rgba(100,100,130,0.2)";
     return "var(--c-pill-inactive)";
   }
 
@@ -140,12 +140,13 @@ function ActivityCalendar() {
           const isToday = ds === todayStr;
           const isFuture = date > today;
           return (
-            <div key={ds} className="aspect-square flex items-center justify-center rounded-full text-[10px] font-semibold"
+            <div key={ds} className="aspect-square flex items-center justify-center rounded-lg text-[10px] font-bold"
               style={{
                 background: isFuture ? "transparent" : cellColor(date),
-                color: isToday ? "#fff" : "var(--c-sub)",
-                border: isToday ? "2px solid var(--c-accent)" : "none",
-                opacity: isFuture ? 0.3 : 1,
+                color: isToday ? "#fff" : (cellColor(date) === "var(--c-pill-inactive)" ? "var(--c-sub)" : "#fff"),
+                outline: isToday ? "2px solid var(--c-accent)" : "none",
+                outlineOffset: 1,
+                opacity: isFuture ? 0.25 : 1,
               }}>
               {date.getDate()}
             </div>
@@ -156,9 +157,10 @@ function ActivityCalendar() {
       {/* Legend */}
       <div className="flex flex-wrap gap-3 mt-3">
         {[
-          { color: "var(--c-accent)", label: "Food + Exercise" },
-          { color: "var(--c-accent-bg)", label: "Exercise only" },
-          { color: "var(--c-warn-bg)", label: "Food only" },
+          { color: "#22C55E", label: "Full day logged" },
+          { color: "#4ADE80", label: "Food logged" },
+          { color: "#86EFAC", label: "Exercise only" },
+          { color: "var(--c-pill-inactive)", label: "Not logged" },
         ].map(({ color, label }) => (
           <div key={label} className="flex items-center gap-1">
             <div className="h-2.5 w-2.5 rounded-full" style={{ background: color }} />
@@ -253,7 +255,6 @@ export default function Profile() {
   const [progressTab, setProgressTab] = useState("week");
   const { mode, cycle } = useTheme();
   const ThemeIcon = THEME_ICONS[mode] || Sunset;
-  const missedDays = useMissedDays();
 
   if (!profile) { navigate("/onboarding", { replace: true }); return null; }
 
@@ -343,29 +344,6 @@ export default function Profile() {
       </div>
 
       <div className="px-4 space-y-4 mt-4">
-
-        {/* Missed days banner */}
-        {missedDays.length > 0 && (
-          <div className="rounded-2xl p-3" style={{ background: "var(--c-warn-bg)", border: "1px solid var(--c-warn-border)" }}>
-            <p className="text-xs font-bold mb-2" style={{ color: "var(--c-warn)" }}>
-              ⚠️ You missed logging on {missedDays.length} day{missedDays.length > 1 ? "s" : ""}
-            </p>
-            <div className="flex flex-wrap gap-2">
-              {missedDays.map(d => (
-                <div key={d.toDateString()} className="flex items-center gap-1.5 rounded-lg px-2 py-1"
-                  style={{ background: "var(--c-card)", border: "1px solid var(--c-warn-border)" }}>
-                  <span className="text-[11px] font-semibold" style={{ color: "var(--c-text)" }}>
-                    {d.toLocaleDateString("en-GB", { weekday: "short", day: "numeric" })}
-                  </span>
-                  <button onClick={() => navigate("/log")} className="text-[10px] font-bold px-1.5 py-0.5 rounded"
-                    style={{ background: "var(--c-warn)", color: "#fff" }}>Log</button>
-                  <button onClick={() => { cache.markDaySkipped(d.toDateString()); }}
-                    className="text-[10px] font-bold" style={{ color: "var(--c-sub)" }}>Skip</button>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
 
         {/* Stats */}
         <div className="grid grid-cols-3 gap-3">

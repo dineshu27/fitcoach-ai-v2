@@ -146,8 +146,9 @@ export default function ExerciseCard({ exercise, index }) {
     <div
       className="overflow-hidden rounded-xl transition-all"
       style={{
-        background: open ? "var(--c-accent-bg)" : "var(--c-card)",
+        background: "var(--c-card)",
         border: open ? "1px solid var(--c-border-bright)" : "1px solid var(--c-border)",
+        boxShadow: open ? "var(--c-card-shadow)" : "none",
       }}
     >
       <button className="flex w-full items-center gap-3 p-3 text-left" onClick={() => setOpen((o) => !o)}>

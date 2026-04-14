@@ -12,7 +12,7 @@ import Coach from "./screens/Coach";
 import Profile from "./screens/Profile";
 import BottomNav from "./components/BottomNav";
 
-const MAIN = ["/dashboard", "/log", "/exercise", "/coach", "/profile"];
+const MAIN = ["/dashboard", "/log", "/diet", "/exercise", "/profile"];
 
 function AnimatedRoutes() {
   const location = useLocation();

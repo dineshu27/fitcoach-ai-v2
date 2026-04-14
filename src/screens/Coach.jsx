@@ -17,7 +17,7 @@ const QUICK_PROMPTS = [
   "What's a good snack?",
 ];
 
-function detectRexState(lastMsg, isLoading) {
+function detectState(lastMsg, isLoading) {
   if (isLoading) return "thinking";
   if (!lastMsg) return "idle";
   const text = (lastMsg.content || "").toLowerCase();
@@ -30,7 +30,7 @@ function detectRexState(lastMsg, isLoading) {
 function buildWelcome(profile, plan) {
   const name = profile?.name?.split(" ")[0] || "there";
   const goals = Array.isArray(profile?.goals) ? profile.goals.join(" + ") : (profile?.goal || "fitness");
-  return `Hey ${name}! I'm REX, your AI fitness coach. I've set you up with a ${plan?.calories || ""}kcal plan targeting: ${goals}. ${profile?.bodyFocus ? `Your focus is ${profile.bodyFocus}. ` : ""}What can I help you with today?`;
+  return `Hey ${name}! I'm FiTAi, your AI fitness coach. I've set you up with a ${plan?.calories || ""}kcal plan targeting: ${goals}. ${profile?.bodyFocus ? `Your focus is ${profile.bodyFocus}. ` : ""}What can I help you with today?`;
 }
 
 export default function Coach() {
@@ -43,7 +43,7 @@ export default function Coach() {
   const inputRef = useRef(null);
 
   const lastMsg = messages[messages.length - 1];
-  const rexState = detectRexState(lastMsg, loading);
+  const fitaiState = detectState(lastMsg, loading);
   const remaining = cache.chatsRemaining();
 
   useEffect(() => {
@@ -60,7 +60,7 @@ export default function Coach() {
   }, [messages]);
 
   async function send(text) {
-    const q = (text || input).trim();
+    const q = (text || input).trim().slice(0, 500);
     if (!q || loading) return;
     if (!cache.canChat()) {
       setMessages((m) => [...m, { role: "assistant", content: "You've used all 5 free chats today! Come back tomorrow for more. 🤖", id: Date.now() }]);
@@ -70,7 +70,6 @@ export default function Coach() {
     setMessages((m) => [...m, userMsg]);
     setInput("");
     setLoading(true);
-
     try {
       const apiMsgs = [...messages, userMsg].map((m) => ({ role: m.role, content: m.content }));
       cache.incrementChatCount();
@@ -84,57 +83,55 @@ export default function Coach() {
   }
 
   return (
-    <div className="flex flex-col coach-grid" style={{ height: "100svh", background: "#0A0A0F" }}>
+    <div className="flex flex-col coach-grid" style={{ height: "100svh", background: "var(--c-bg)" }}>
       {/* Header */}
       <div className="flex-shrink-0 flex items-center gap-3 px-4 pt-safe pt-4 pb-3"
-        style={{ borderBottom: "1px solid rgba(108,99,255,0.15)", background: "rgba(10,10,15,0.95)", backdropFilter: "blur(16px)" }}>
+        style={{ borderBottom: "1px solid var(--c-border)", background: "var(--c-nav)", backdropFilter: "blur(16px)" }}>
         <div>
-          <p className="font-bold" style={{ color: "#F0F0FF" }}>REX — AI Coach</p>
+          <p className="font-bold" style={{ color: "var(--c-text)" }}>FiTAi — AI Coach</p>
           <div className="flex items-center gap-1.5">
             <span className="h-2 w-2 rounded-full animate-pulse" style={{ background: "#4ECDC4" }} />
-            <span className="text-xs" style={{ color: "#8888AA" }}>Online</span>
+            <span className="text-xs" style={{ color: "var(--c-sub)" }}>Online</span>
           </div>
         </div>
         <div className="ml-auto flex items-center gap-2">
-          {/* Chat limit pill */}
           {!cache.isPremium() && (
             <span className="rounded-full px-2.5 py-1 text-[10px] font-semibold"
-              style={{ background: remaining <= 1 ? "rgba(255,107,107,0.15)" : "rgba(108,99,255,0.15)",
-                border: remaining <= 1 ? "1px solid rgba(255,107,107,0.3)" : "1px solid rgba(108,99,255,0.25)",
-                color: remaining <= 1 ? "#FF6B6B" : "#6C63FF" }}>
+              style={{
+                background: remaining <= 1 ? "rgba(255,107,107,0.15)" : "var(--c-accent-bg)",
+                border: remaining <= 1 ? "1px solid rgba(255,107,107,0.3)" : "1px solid var(--c-border-bright)",
+                color: remaining <= 1 ? "#FF6B6B" : "var(--c-accent)",
+              }}>
               {remaining}/5 chats left
             </span>
           )}
           <button onClick={() => { cache.saveChat([]); setMessages([{ role: "assistant", content: buildWelcome(profile, plan), id: Date.now() }]); }}
-            className="text-xs rounded-lg px-3 py-1.5" style={{ background: "rgba(108,99,255,0.1)", color: "#8888AA" }}>
+            className="text-xs rounded-lg px-3 py-1.5" style={{ background: "var(--c-accent-bg)", color: "var(--c-sub)" }}>
             Clear
           </button>
         </div>
       </div>
 
-      {/* REX hero + messages */}
+      {/* FiTAi hero + messages */}
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4" style={{ paddingBottom: 130 }}>
-        {/* REX display area */}
         <div className="flex flex-col items-center py-4">
           <AnimatePresence mode="wait">
-            <motion.div key={rexState} initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 0.2 }}>
-              <REX state={rexState} size="lg" />
+            <motion.div key={fitaiState} initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 0.2 }}>
+              <REX state={fitaiState} size="lg" />
             </motion.div>
           </AnimatePresence>
-          {/* Speech bubble for latest assistant message */}
           {lastMsg?.role === "assistant" && !loading && (
             <motion.div
               initial={{ opacity: 0, scale: 0.9, y: 8 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               className="mt-4 max-w-[280px] rounded-2xl px-4 py-3 text-sm text-center"
-              style={{ background: "rgba(108,99,255,0.12)", border: "1px solid rgba(108,99,255,0.25)", color: "#F0F0FF" }}
+              style={{ background: "var(--c-accent-bg)", border: "1px solid var(--c-border-bright)", color: "var(--c-text)" }}
             >
               {lastMsg.content.slice(0, 100)}{lastMsg.content.length > 100 ? "..." : ""}
             </motion.div>
           )}
         </div>
 
-        {/* Chat history */}
         {messages.map((msg) => (
           <motion.div key={msg.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
             <ChatBubble message={msg} />
@@ -145,35 +142,33 @@ export default function Coach() {
       </div>
 
       {/* Quick prompts + input */}
-      <div className="flex-shrink-0" style={{ background: "rgba(10,10,15,0.97)", backdropFilter: "blur(16px)", borderTop: "1px solid rgba(108,99,255,0.15)" }}>
-        {/* Quick prompts */}
+      <div className="flex-shrink-0" style={{ background: "var(--c-nav)", backdropFilter: "blur(16px)", borderTop: "1px solid var(--c-border)" }}>
         <div className="flex gap-2 overflow-x-auto scrollbar-hide px-4 pt-3 pb-2">
           {QUICK_PROMPTS.map((q) => (
-            <button key={q} onClick={() => send(q)} disabled={loading}
+            <button key={q} onClick={() => send(q)} disabled={loading || remaining <= 0}
               className="flex-shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold transition-all disabled:opacity-50"
-              style={{ background: "rgba(108,99,255,0.1)", border: "1px solid rgba(108,99,255,0.2)", color: "#8888AA", whiteSpace: "nowrap" }}>
+              style={{ background: "var(--c-accent-bg)", border: "1px solid var(--c-border)", color: "var(--c-sub)", whiteSpace: "nowrap" }}>
               {q}
             </button>
           ))}
         </div>
-
-        {/* Input bar */}
         <div className="flex items-center gap-2 px-4 pt-2 pb-safe" style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 12px)" }}>
           <div className="flex flex-1 items-center rounded-full px-4 py-2.5 transition-all"
-            style={{ background: "rgba(26,26,38,0.9)", border: "1px solid rgba(108,99,255,0.2)" }}>
+            style={{ background: "var(--c-input)", border: "1px solid var(--c-border)" }}>
             <input
               ref={inputRef}
               value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && send()}
-              placeholder="Ask REX anything..."
-              className="flex-1 bg-transparent text-sm outline-none"
-              style={{ color: "#F0F0FF", fontFamily: "Space Grotesk, sans-serif" }}
+              onChange={(e) => setInput(e.target.value.slice(0, 500))}
+              onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && remaining > 0 && send()}
+              placeholder={remaining > 0 ? "Ask FiTAi anything..." : "No chats left today"}
+              disabled={remaining <= 0}
+              className="flex-1 bg-transparent text-sm outline-none disabled:opacity-50"
+              style={{ color: "var(--c-text)", fontFamily: "Space Grotesk, sans-serif" }}
             />
           </div>
-          <button onClick={() => send()} disabled={!input.trim() || loading}
+          <button onClick={() => send()} disabled={!input.trim() || loading || remaining <= 0}
             className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full transition-all disabled:opacity-40"
-            style={{ background: "#6C63FF", boxShadow: "0 0 15px rgba(108,99,255,0.4)" }}>
+            style={{ background: "var(--c-accent)", boxShadow: "0 0 15px rgba(var(--c-accent-rgb),0.4)" }}>
             <Send size={16} color="white" />
           </button>
         </div>

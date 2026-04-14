@@ -2,6 +2,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { Clock, Flame, Target, Moon } from "lucide-react";
 import ExerciseCard from "../components/ExerciseCard";
+import StretchCard from "../components/StretchCard";
 import REX from "../components/REX";
 import { cache } from "../lib/cache";
 
@@ -9,23 +10,25 @@ const SHORT = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
 const FULL = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
 
 const TYPE_STYLE = {
-  Gym: { bg: "rgba(108,99,255,0.2)", border: "rgba(108,99,255,0.5)", color: "#6C63FF" },
+  Gym: { bg: "rgba(var(--c-accent-rgb),0.2)", border: "rgba(var(--c-accent-rgb),0.5)", color: "var(--c-accent)" },
   Cardio: { bg: "rgba(255,107,107,0.15)", border: "rgba(255,107,107,0.4)", color: "#FF6B6B" },
   Outdoor: { bg: "rgba(78,205,196,0.15)", border: "rgba(78,205,196,0.4)", color: "#4ECDC4" },
-  Home: { bg: "rgba(255,230,109,0.15)", border: "rgba(255,230,109,0.4)", color: "#FFE66D" },
-  Rest: { bg: "rgba(136,136,170,0.1)", border: "rgba(136,136,170,0.2)", color: "#8888AA" },
+  Home: { bg: "var(--c-warn-bg)", border: "var(--c-warn-border)", color: "var(--c-warn)" },
+  Rest: { bg: "rgba(136,136,170,0.1)", border: "rgba(136,136,170,0.2)", color: "var(--c-sub)" },
 };
 
 export default function ExercisePlan() {
   const plan = cache.getPlan();
   const profile = cache.getProfile();
+  const weekLen = plan?.weekPlan?.length || 7;
   const today = new Date().getDay();
-  const todayIdx = today === 0 ? 6 : today - 1;
+  const rawIdx = today === 0 ? 6 : today - 1;
+  const todayIdx = Math.min(rawIdx, weekLen - 1);
   const [day, setDay] = useState(todayIdx);
 
   if (!plan) return (
-    <div className="flex min-h-screen items-center justify-center" style={{ background: "#0A0A0F" }}>
-      <p style={{ color: "#8888AA" }}>No plan found.</p>
+    <div className="flex min-h-screen items-center justify-center" style={{ background: "var(--c-bg)" }}>
+      <p style={{ color: "var(--c-sub)" }}>No plan found.</p>
     </div>
   );
 
@@ -36,15 +39,15 @@ export default function ExercisePlan() {
   const hasCondition = profile?.conditions?.some((c) => c !== "None");
 
   return (
-    <div className="min-h-screen pb-nav" style={{ background: "#0A0A0F" }}>
+    <div className="min-h-screen pb-nav" style={{ background: "var(--c-bg)" }}>
       {/* Header */}
-      <div className="px-4 pt-safe pt-6 pb-4" style={{ borderBottom: "1px solid rgba(108,99,255,0.12)" }}>
-        <h1 className="text-2xl font-bold" style={{ color: "#F0F0FF" }}>Exercise Plan</h1>
+      <div className="px-4 pt-safe pt-6 pb-4" style={{ borderBottom: "1px solid var(--c-border)" }}>
+        <h1 className="text-2xl font-bold" style={{ color: "var(--c-text)" }}>Exercise Plan</h1>
         <div className="flex items-center gap-2 mt-0.5">
-          <p className="text-sm" style={{ color: "#8888AA" }}>{profile?.daysPerWeek} workout days/week</p>
+          <p className="text-sm" style={{ color: "var(--c-sub)" }}>{profile?.daysPerWeek} workout days/week</p>
           {(profile?.bodyFocus || plan?.bodyFocus) && (
             <span className="flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold"
-              style={{ background: "rgba(108,99,255,0.15)", border: "1px solid rgba(108,99,255,0.3)", color: "#6C63FF" }}>
+              style={{ background: "rgba(var(--c-accent-rgb),0.15)", border: "1px solid rgba(var(--c-accent-rgb),0.3)", color: "var(--c-accent)" }}>
               <Target size={10} /> {profile?.bodyFocus || plan?.bodyFocus}
             </span>
           )}
@@ -59,10 +62,10 @@ export default function ExercisePlan() {
             <button key={d} onClick={() => setDay(i)}
               className="flex-shrink-0 rounded-xl px-3.5 py-2 text-sm font-semibold transition-all"
               style={{
-                background: day === i ? "#6C63FF" : "rgba(26,26,38,0.8)",
-                border: day === i ? "1px solid #6C63FF" : "1px solid rgba(108,99,255,0.15)",
-                color: day === i ? "#fff" : "#8888AA",
-                boxShadow: day === i ? "0 0 10px rgba(108,99,255,0.35)" : "none",
+                background: day === i ? "var(--c-accent)" : "var(--c-card)",
+                border: day === i ? "1px solid var(--c-accent)" : "1px solid rgba(var(--c-accent-rgb),0.15)",
+                color: day === i ? "#fff" : "var(--c-sub)",
+                boxShadow: day === i ? "0 0 10px rgba(var(--c-accent-rgb),0.35)" : "none",
               }}>
               {d}{isR ? " 💤" : ""}
             </button>
@@ -77,8 +80,8 @@ export default function ExercisePlan() {
             <div className="rounded-2xl p-4 glass">
               <div className="flex items-start justify-between">
                 <div>
-                  <h2 className="text-lg font-bold" style={{ color: "#F0F0FF" }}>{FULL[day]}</h2>
-                  <p className="text-sm mt-0.5" style={{ color: "#8888AA" }}>{w?.focus || "Rest day"}</p>
+                  <h2 className="text-lg font-bold" style={{ color: "var(--c-text)" }}>{FULL[day]}</h2>
+                  <p className="text-sm mt-0.5" style={{ color: "var(--c-sub)" }}>{w?.focus || "Rest day"}</p>
                   {!isRest && (
                     <div className="mt-2 flex gap-2">
                       <span className="rounded-full px-3 py-1 text-xs font-bold"
@@ -86,19 +89,19 @@ export default function ExercisePlan() {
                         {w?.type}
                       </span>
                       {w?.duration && (
-                        <span className="flex items-center gap-1 text-xs" style={{ color: "#8888AA" }}>
+                        <span className="flex items-center gap-1 text-xs" style={{ color: "var(--c-sub)" }}>
                           <Clock size={12} /> {w.duration}
                         </span>
                       )}
                       {w?.exercises?.length > 0 && (
-                        <span className="flex items-center gap-1 text-xs" style={{ color: "#8888AA" }}>
+                        <span className="flex items-center gap-1 text-xs" style={{ color: "var(--c-sub)" }}>
                           <Flame size={12} /> {w.exercises.length} exercises
                         </span>
                       )}
                     </div>
                   )}
                 </div>
-                {isRest && <Moon size={28} style={{ color: "#8888AA" }} />}
+                {isRest && <Moon size={28} style={{ color: "var(--c-sub)" }} />}
               </div>
             </div>
 
@@ -107,15 +110,15 @@ export default function ExercisePlan() {
                 <div className="flex justify-center mb-4">
                   <REX state="idle" size="md" />
                 </div>
-                <p className="font-bold mb-1" style={{ color: "#F0F0FF" }}>Rest & Recovery Day</p>
-                <p className="text-sm mb-4" style={{ color: "#8888AA" }}>Let REX recharge too 🤖</p>
+                <p className="font-bold mb-1" style={{ color: "var(--c-text)" }}>Rest & Recovery Day</p>
+                <p className="text-sm mb-4" style={{ color: "var(--c-sub)" }}>Let REX recharge too 🤖</p>
                 {w?.exercises?.length > 0 ? (
                   <div className="space-y-2 text-left">
-                    <p className="text-xs font-semibold mb-2" style={{ color: "#6C63FF" }}>Light mobility work:</p>
+                    <p className="text-xs font-semibold mb-2" style={{ color: "var(--c-accent)" }}>Light mobility work:</p>
                     {w.exercises.map((ex, i) => <ExerciseCard key={i} exercise={ex} index={i} />)}
                   </div>
                 ) : (
-                  <div className="space-y-2 text-sm text-left" style={{ color: "#8888AA" }}>
+                  <div className="space-y-2 text-sm text-left" style={{ color: "var(--c-sub)" }}>
                     {["Light 20–30 min walk", "Full body stretching 10 min", "Aim for 2L+ water", "Get 7–9 hours sleep"].map((t, i) => (
                       <p key={i}>• {t}</p>
                     ))}
@@ -124,35 +127,41 @@ export default function ExercisePlan() {
               </div>
             ) : (
               <>
+                {/* Pre-workout stretch */}
+                <StretchCard type="pre" workoutFocus={w?.focus} />
+
                 {w?.warmup && (
-                  <div className="rounded-xl p-3" style={{ background: "rgba(255,230,109,0.06)", border: "1px solid rgba(255,230,109,0.2)" }}>
-                    <p className="text-[10px] font-bold uppercase mb-1" style={{ color: "#FFE66D" }}>Warm-up</p>
-                    <p className="text-sm" style={{ color: "#F0F0FF" }}>{w.warmup}</p>
+                  <div className="rounded-xl p-3" style={{ background: "var(--c-warn-bg)", border: "1px solid var(--c-warn-border)" }}>
+                    <p className="text-[10px] font-bold uppercase mb-1" style={{ color: "var(--c-warn)" }}>Warm-up notes</p>
+                    <p className="text-sm" style={{ color: "var(--c-text)" }}>{w.warmup}</p>
                   </div>
                 )}
 
                 {w?.exercises?.length > 0 && (
                   <div>
-                    <h3 className="font-bold mb-2" style={{ color: "#F0F0FF" }}>Exercises</h3>
+                    <h3 className="font-bold mb-2" style={{ color: "var(--c-text)" }}>Exercises</h3>
                     <div className="space-y-2">
                       {w.exercises.map((ex, i) => <ExerciseCard key={i} exercise={ex} index={i} />)}
                     </div>
                   </div>
                 )}
 
+                {/* Post-workout stretch */}
+                <StretchCard type="post" workoutFocus={w?.focus} />
+
                 {w?.cooldown && (
-                  <div className="rounded-xl p-3" style={{ background: "rgba(78,205,196,0.06)", border: "1px solid rgba(78,205,196,0.2)" }}>
-                    <p className="text-[10px] font-bold uppercase mb-1" style={{ color: "#4ECDC4" }}>Cool-down</p>
-                    <p className="text-sm" style={{ color: "#F0F0FF" }}>{w.cooldown}</p>
+                  <div className="rounded-xl p-3" style={{ background: "var(--c-cool-bg)", border: "1px solid var(--c-cool-border)" }}>
+                    <p className="text-[10px] font-bold uppercase mb-1" style={{ color: "#4ECDC4" }}>Cool-down notes</p>
+                    <p className="text-sm" style={{ color: "var(--c-text)" }}>{w.cooldown}</p>
                   </div>
                 )}
               </>
             )}
 
             {hasCondition && plan.conditionTips?.[1] && (
-              <div className="rounded-2xl p-4" style={{ background: "rgba(255,230,109,0.06)", border: "1px solid rgba(255,230,109,0.2)" }}>
-                <p className="text-xs font-bold uppercase mb-1" style={{ color: "#FFE66D" }}>Condition note</p>
-                <p className="text-xs leading-relaxed" style={{ color: "#8888AA" }}>{plan.conditionTips[1]}</p>
+              <div className="rounded-2xl p-4" style={{ background: "var(--c-warn-bg)", border: "1px solid var(--c-warn-border)" }}>
+                <p className="text-xs font-bold uppercase mb-1" style={{ color: "var(--c-warn)" }}>Condition note</p>
+                <p className="text-xs leading-relaxed" style={{ color: "var(--c-sub)" }}>{plan.conditionTips[1]}</p>
               </div>
             )}
           </motion.div>

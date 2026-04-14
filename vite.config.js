@@ -1,8 +1,25 @@
+/// <reference types="vitest" />
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import { VitePWA } from "vite-plugin-pwa";
 
 export default defineConfig({
+  test: {
+    environment: "jsdom",
+    globals: true,
+    coverage: { reporter: ["text", "json-summary"] },
+  },
+  server: {
+    proxy: {
+      "/api/claude": {
+        target: "https://api.anthropic.com",
+        changeOrigin: true,
+        rewrite: () => "/v1/messages",
+        timeout: 120000,
+        proxyTimeout: 120000,
+      },
+    },
+  },
   plugins: [
     react(),
     VitePWA({

@@ -1,25 +1,19 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronDown, ChevronUp, Info } from "lucide-react";
-
-function YtIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-      <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
-    </svg>
-  );
-}
+import { ChevronDown, ChevronUp, Info, PlayCircle, ClipboardList, CheckCircle2, Plus } from "lucide-react";
+import VideoModal, { getVideoId } from "./VideoModal";
+import { cache } from "../lib/cache";
 
 const MUSCLE_COLORS = {
-  chest: "rgba(255,107,107,0.2)", back: "rgba(78,205,196,0.2)", shoulders: "rgba(108,99,255,0.2)",
+  chest: "rgba(255,107,107,0.2)", back: "rgba(78,205,196,0.2)", shoulders: "rgba(var(--c-accent-rgb),0.2)",
   biceps: "rgba(255,182,193,0.2)", triceps: "rgba(255,165,0,0.2)", quads: "rgba(78,205,196,0.2)",
-  hamstrings: "rgba(78,205,196,0.15)", glutes: "rgba(144,238,144,0.2)", core: "rgba(255,230,109,0.2)",
-  cardio: "rgba(108,99,255,0.15)",
+  hamstrings: "rgba(78,205,196,0.15)", glutes: "rgba(144,238,144,0.2)", core: "rgba(245,158,11,0.15)",
+  cardio: "rgba(var(--c-accent-rgb),0.15)",
 };
 const MUSCLE_TEXT = {
-  chest: "#FF6B6B", back: "#4ECDC4", shoulders: "#6C63FF", biceps: "#FFB6C1",
-  triceps: "#FFA500", quads: "#4ECDC4", hamstrings: "#4ECDC4", glutes: "#90EE90",
-  core: "#FFE66D", cardio: "#8880FF",
+  chest: "#FF6B6B", back: "#0D7A76", shoulders: "var(--c-accent)", biceps: "#C2185B",
+  triceps: "#E67E00", quads: "#0D7A76", hamstrings: "#0D7A76", glutes: "#2E7D32",
+  core: "#F59E0B", cardio: "#8880FF",
 };
 
 function getMuscleKey(mg = "") {
@@ -30,28 +24,142 @@ function getMuscleKey(mg = "") {
   return null;
 }
 
-export default function ExerciseCard({ exercise, index }) {
-  const [open, setOpen] = useState(false);
-  const mk = getMuscleKey(exercise.muscleGroup || exercise.name || "");
+function parseSetCount(setsStr = "") {
+  const n = parseInt(setsStr);
+  return isNaN(n) ? 3 : Math.min(Math.max(n, 1), 8);
+}
+
+function SetTracker({ exercise }) {
+  const numSets = parseSetCount(exercise.sets);
+  const defaultReps = parseInt(exercise.reps) || 10;
+
+  const [logs, setLogs] = useState(() => {
+    const saved = cache.getExerciseLog(exercise.name);
+    if (saved) return saved;
+    return Array.from({ length: numSets }, (_, i) => ({ set: i + 1, weight: "", reps: defaultReps, done: false }));
+  });
+
+  const prev = cache.getPrevExerciseLog(exercise.name);
+
+  function update(idx, field, value) {
+    const next = logs.map((s, i) => i === idx ? { ...s, [field]: value } : s);
+    setLogs(next);
+    cache.logExerciseSet(exercise.name, next);
+  }
+
+  function toggleDone(idx) {
+    const next = logs.map((s, i) => i === idx ? { ...s, done: !s.done } : s);
+    setLogs(next);
+    cache.logExerciseSet(exercise.name, next);
+  }
+
+  function addSet() {
+    const next = [...logs, { set: logs.length + 1, weight: "", reps: defaultReps, done: false }];
+    setLogs(next);
+    cache.logExerciseSet(exercise.name, next);
+  }
+
+  const completedCount = logs.filter((s) => s.done).length;
 
   return (
+    <div className="rounded-xl overflow-hidden" style={{ border: "1px solid var(--c-border)" }}>
+      {/* Header */}
+      <div className="flex items-center justify-between px-3 py-2"
+        style={{ background: "var(--c-accent-bg)", borderBottom: "1px solid var(--c-border)" }}>
+        <div className="flex items-center gap-2">
+          <ClipboardList size={13} style={{ color: "var(--c-accent)" }} />
+          <span className="text-xs font-bold" style={{ color: "var(--c-accent)" }}>Track Sets</span>
+        </div>
+        <span className="text-[10px] font-semibold" style={{ color: "var(--c-sub)" }}>
+          {completedCount}/{logs.length} done
+        </span>
+      </div>
+
+      {/* Previous session reference */}
+      {prev && (
+        <div className="px-3 py-1.5 text-[10px]" style={{ color: "var(--c-sub)", background: "var(--c-warn-bg)", borderBottom: "1px solid var(--c-border)" }}>
+          Last session ({prev.date}): {prev.sets.filter(s => s.done).length}/{prev.sets.length} sets completed
+          {prev.sets[0]?.weight ? ` · ${prev.sets[0].weight}kg` : ""}
+        </div>
+      )}
+
+      {/* Column headers */}
+      <div className="grid grid-cols-[32px_1fr_1fr_36px] gap-1.5 px-3 py-1.5 text-[10px] font-semibold"
+        style={{ color: "var(--c-sub)", borderBottom: "1px solid var(--c-border)" }}>
+        <span>Set</span>
+        <span>Weight (kg)</span>
+        <span>Reps</span>
+        <span></span>
+      </div>
+
+      {/* Set rows */}
+      <div className="divide-y" style={{ borderColor: "var(--c-border)" }}>
+        {logs.map((s, i) => (
+          <div key={i} className="grid grid-cols-[32px_1fr_1fr_36px] gap-1.5 items-center px-3 py-2"
+            style={{ background: s.done ? "rgba(78,205,196,0.05)" : "transparent" }}>
+            <span className="text-xs font-bold" style={{ color: s.done ? "#4ECDC4" : "var(--c-sub)" }}>{s.set}</span>
+            <input
+              type="number"
+              placeholder="—"
+              value={s.weight}
+              min="0"
+              onChange={(e) => update(i, "weight", e.target.value)}
+              className="rounded-lg px-2 py-1 text-xs text-center outline-none w-full"
+              style={{ background: "var(--c-input, var(--c-card))", border: "1px solid var(--c-border)", color: "var(--c-text)" }}
+            />
+            <input
+              type="number"
+              value={s.reps}
+              min="1"
+              onChange={(e) => update(i, "reps", parseInt(e.target.value) || 1)}
+              className="rounded-lg px-2 py-1 text-xs text-center outline-none w-full"
+              style={{ background: "var(--c-input, var(--c-card))", border: "1px solid var(--c-border)", color: "var(--c-text)" }}
+            />
+            <button onClick={() => toggleDone(i)} className="flex items-center justify-center rounded-lg p-1.5 transition-all"
+              style={{ background: s.done ? "rgba(78,205,196,0.2)" : "var(--c-accent-bg)", border: `1px solid ${s.done ? "rgba(78,205,196,0.4)" : "var(--c-border)"}` }}>
+              <CheckCircle2 size={14} style={{ color: s.done ? "#4ECDC4" : "var(--c-sub)" }} />
+            </button>
+          </div>
+        ))}
+      </div>
+
+      {/* Add set */}
+      <button onClick={addSet}
+        className="flex w-full items-center justify-center gap-1.5 py-2 text-xs font-semibold transition-all"
+        style={{ color: "var(--c-sub)", borderTop: "1px solid var(--c-border)" }}>
+        <Plus size={12} /> Add Set
+      </button>
+    </div>
+  );
+}
+
+export default function ExerciseCard({ exercise, index }) {
+  const [open, setOpen] = useState(false);
+  const [showVideo, setShowVideo] = useState(false);
+  const [showTracker, setShowTracker] = useState(false);
+  if (!exercise || !exercise.name) return null;
+  const mk = getMuscleKey(exercise.muscleGroup || exercise.name || "");
+  const hasVideo = !!getVideoId(exercise.name);
+
+  return (
+    <>
     <div
       className="overflow-hidden rounded-xl transition-all"
       style={{
-        background: open ? "rgba(108,99,255,0.06)" : "rgba(26,26,38,0.8)",
-        border: open ? "1px solid rgba(108,99,255,0.4)" : "1px solid rgba(108,99,255,0.15)",
+        background: open ? "var(--c-accent-bg)" : "var(--c-card)",
+        border: open ? "1px solid var(--c-border-bright)" : "1px solid var(--c-border)",
       }}
     >
       <button className="flex w-full items-center gap-3 p-3 text-left" onClick={() => setOpen((o) => !o)}>
         <span
           className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full text-xs font-bold text-white"
-          style={{ background: "#6C63FF", boxShadow: "0 0 10px rgba(108,99,255,0.5)" }}
+          style={{ background: "var(--c-accent)", boxShadow: "0 0 10px rgba(var(--c-accent-rgb, 108,99,255),0.5)" }}
         >
           {index + 1}
         </span>
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <p className="font-semibold text-sm" style={{ color: "#F0F0FF" }}>{exercise.name}</p>
+            <p className="font-semibold text-sm" style={{ color: "var(--c-text)" }}>{exercise.name}</p>
             {mk && (
               <span className="rounded-full px-2 py-0.5 text-[10px] font-semibold"
                 style={{ background: MUSCLE_COLORS[mk], color: MUSCLE_TEXT[mk] }}>
@@ -62,24 +170,24 @@ export default function ExerciseCard({ exercise, index }) {
           <div className="mt-1 flex flex-wrap gap-1.5">
             {exercise.sets && exercise.reps && (
               <span className="rounded-full px-2 py-0.5 text-xs font-semibold"
-                style={{ background: "rgba(108,99,255,0.2)", color: "#6C63FF" }}>
+                style={{ background: "var(--c-accent-bg)", color: "var(--c-accent)" }}>
                 {exercise.sets} × {exercise.reps}
               </span>
             )}
             {exercise.duration && !exercise.reps && (
               <span className="rounded-full px-2 py-0.5 text-xs font-semibold"
-                style={{ background: "rgba(108,99,255,0.2)", color: "#6C63FF" }}>
+                style={{ background: "var(--c-accent-bg)", color: "var(--c-accent)" }}>
                 {exercise.duration}
               </span>
             )}
             {exercise.rest && (
-              <span className="rounded-full px-2 py-0.5 text-xs" style={{ background: "rgba(255,255,255,0.05)", color: "#8888AA" }}>
+              <span className="rounded-full px-2 py-0.5 text-xs" style={{ background: "var(--c-pill-inactive)", color: "var(--c-sub)" }}>
                 Rest {exercise.rest}
               </span>
             )}
           </div>
         </div>
-        <div style={{ color: "#8888AA" }}>
+        <div style={{ color: "var(--c-sub)" }}>
           {open ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
         </div>
       </button>
@@ -93,7 +201,7 @@ export default function ExerciseCard({ exercise, index }) {
             transition={{ duration: 0.2 }}
             style={{ overflow: "hidden" }}
           >
-            <div className="px-3 pb-3 pt-1 space-y-3" style={{ borderTop: "1px solid rgba(108,99,255,0.15)" }}>
+            <div className="px-3 pb-3 pt-1 space-y-3" style={{ borderTop: "1px solid var(--c-border)" }}>
               {/* Stats grid */}
               <div className="grid grid-cols-3 gap-2 mt-2">
                 {[
@@ -102,9 +210,9 @@ export default function ExerciseCard({ exercise, index }) {
                   { label: "Rest", val: exercise.rest },
                 ].filter((x) => x.val).map(({ label, val }) => (
                   <div key={label} className="rounded-xl p-2 text-center"
-                    style={{ background: "rgba(108,99,255,0.08)", border: "1px solid rgba(108,99,255,0.2)" }}>
-                    <p className="font-bold text-sm" style={{ color: "#F0F0FF" }}>{val}</p>
-                    <p className="text-[10px]" style={{ color: "#8888AA" }}>{label}</p>
+                    style={{ background: "var(--c-accent-bg)", border: "1px solid var(--c-border)" }}>
+                    <p className="font-bold text-sm" style={{ color: "var(--c-text)" }}>{val}</p>
+                    <p className="text-[10px]" style={{ color: "var(--c-sub)" }}>{label}</p>
                   </div>
                 ))}
               </div>
@@ -112,28 +220,45 @@ export default function ExerciseCard({ exercise, index }) {
               {/* Form tip */}
               {exercise.tip && (
                 <div className="flex items-start gap-2 rounded-xl p-3"
-                  style={{ background: "rgba(255,230,109,0.06)", border: "1px solid rgba(255,230,109,0.2)" }}>
-                  <Info size={14} style={{ color: "#FFE66D", flexShrink: 0, marginTop: 1 }} />
-                  <p className="text-xs leading-relaxed" style={{ color: "#FFE66D" }}>{exercise.tip}</p>
+                  style={{ background: "var(--c-warn-bg)", border: "1px solid var(--c-warn-border)" }}>
+                  <Info size={14} style={{ color: "var(--c-warn)", flexShrink: 0, marginTop: 1 }} />
+                  <p className="text-xs leading-relaxed" style={{ color: "var(--c-warn)" }}>{exercise.tip}</p>
                 </div>
               )}
 
-              {/* YouTube button */}
-              <a
-                href={`https://www.youtube.com/results?search_query=${encodeURIComponent(exercise.name + " exercise proper form tutorial")}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-bold text-white transition-all active:scale-95"
-                style={{ background: "#FF0000", boxShadow: "0 0 15px rgba(255,0,0,0.3)" }}
-                onClick={(e) => e.stopPropagation()}
+              {/* Set tracker toggle */}
+              <button
+                onClick={() => setShowTracker((t) => !t)}
+                className="flex w-full items-center justify-center gap-2 rounded-xl py-2 text-xs font-semibold transition-all"
+                style={{ background: "var(--c-accent-bg)", border: "1px solid var(--c-border)", color: "var(--c-accent)" }}
               >
-                <YtIcon />
-                Watch demo on YouTube
-              </a>
+                <ClipboardList size={13} />
+                {showTracker ? "Hide Tracker" : "Track This Exercise"}
+              </button>
+
+              {showTracker && <SetTracker exercise={exercise} />}
+
+              {/* Video button */}
+              <button
+                onClick={(e) => { e.stopPropagation(); setShowVideo(true); }}
+                className="flex w-full items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-bold text-white transition-all active:scale-95"
+                style={{
+                  background: hasVideo ? "#FF0000" : "var(--c-accent-bg)",
+                  boxShadow: hasVideo ? "0 0 15px rgba(255,0,0,0.3)" : "none",
+                  color: hasVideo ? "#fff" : "var(--c-accent)",
+                  border: hasVideo ? "none" : "1px solid var(--c-border)",
+                }}
+              >
+                <PlayCircle size={16} />
+                {hasVideo ? "Watch Tutorial" : "Search Tutorial"}
+              </button>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
     </div>
+
+    {showVideo && <VideoModal exercise={exercise} onClose={() => setShowVideo(false)} />}
+    </>
   );
 }

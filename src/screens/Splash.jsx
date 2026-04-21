@@ -42,10 +42,10 @@ export default function Splash() {
       >
         <h1 className="text-5xl font-extrabold tracking-tight"
           style={{ color: "var(--c-text)", textShadow: "0 0 30px rgba(var(--c-accent-rgb),0.6)" }}>
-          FitCoach<span style={{ color: "var(--c-accent)" }}>AI</span>
+          AI Fit<span style={{ color: "var(--c-accent)" }}>Training</span>
         </h1>
         <p className="mt-2 text-base font-medium" style={{ color: "var(--c-sub)" }}>
-          Your intelligent gym partner
+          Your AI-powered training coach
         </p>
       </motion.div>
 
@@ -57,7 +57,7 @@ export default function Splash() {
         className="mt-6 rounded-2xl px-5 py-3 text-sm font-semibold"
         style={{ background: "rgba(var(--c-accent-rgb),0.15)", border: "1px solid rgba(var(--c-accent-rgb),0.3)", color: "var(--c-text)" }}
       >
-        🤖 Ready to get gains? Let's go!
+        🤖 AI coach online. Let's train!
       </motion.div>
 
       {/* Progress bar */}

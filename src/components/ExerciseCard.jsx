@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown, ChevronUp, Info, PlayCircle, ClipboardList, CheckCircle2, Plus } from "lucide-react";
-import VideoModal, { getVideoId } from "./VideoModal";
+import VideoModal from "./VideoModal";
 import { cache } from "../lib/cache";
 
 const MUSCLE_COLORS = {
@@ -139,8 +139,6 @@ export default function ExerciseCard({ exercise, index }) {
   const [showTracker, setShowTracker] = useState(false);
   if (!exercise || !exercise.name) return null;
   const mk = getMuscleKey(exercise.muscleGroup || exercise.name || "");
-  const hasVideo = !!getVideoId(exercise.name);
-
   return (
     <>
     <div
@@ -242,16 +240,15 @@ export default function ExerciseCard({ exercise, index }) {
               {/* Video button */}
               <button
                 onClick={(e) => { e.stopPropagation(); setShowVideo(true); }}
-                className="flex w-full items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-bold text-white transition-all active:scale-95"
+                className="flex w-full items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-bold transition-all active:scale-95"
                 style={{
-                  background: hasVideo ? "#FF0000" : "var(--c-accent-bg)",
-                  boxShadow: hasVideo ? "0 0 15px rgba(255,0,0,0.3)" : "none",
-                  color: hasVideo ? "#fff" : "var(--c-accent)",
-                  border: hasVideo ? "none" : "1px solid var(--c-border)",
+                  background: "var(--c-accent-bg)",
+                  color: "var(--c-accent)",
+                  border: "1px solid var(--c-border)",
                 }}
               >
                 <PlayCircle size={16} />
-                {hasVideo ? "Watch Tutorial" : "Search Tutorial"}
+                Search Tutorial
               </button>
             </div>
           </motion.div>

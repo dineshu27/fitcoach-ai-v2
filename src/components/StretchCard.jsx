@@ -53,6 +53,7 @@ export const STRETCH_VIDEOS = {
 };
 
 function VideoPlayer({ videoId, title, onClose }) {
+  const embedUrl = `https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1`;
   return (
     <AnimatePresence>
       <motion.div
@@ -76,13 +77,19 @@ function VideoPlayer({ videoId, title, onClose }) {
               <X size={16} style={{ color: "var(--c-sub)" }} />
             </button>
           </div>
+
+          {/* In-app YouTube embed */}
           <div style={{ position: "relative", paddingBottom: "56.25%", background: "#000" }}>
             <iframe
-              src={`https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1`}
+              src={embedUrl}
               title={title}
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowFullScreen
-              style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", border: "none" }}
+              style={{
+                position: "absolute", top: 0, left: 0,
+                width: "100%", height: "100%",
+                border: "none",
+              }}
             />
           </div>
         </motion.div>

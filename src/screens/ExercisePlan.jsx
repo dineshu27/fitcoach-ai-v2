@@ -154,7 +154,7 @@ export default function ExercisePlan() {
                   <REX state="idle" size="md" />
                 </div>
                 <p className="font-bold mb-1" style={{ color: "var(--c-text)" }}>Rest & Recovery Day</p>
-                <p className="text-sm mb-4" style={{ color: "var(--c-sub)" }}>Let REX recharge too 🤖</p>
+                <p className="text-sm mb-4" style={{ color: "var(--c-sub)" }}>Let APEX power down too ⚡</p>
                 {w?.exercises?.length > 0 ? (
                   <div className="space-y-2 text-left">
                     <p className="text-xs font-semibold mb-2" style={{ color: "var(--c-accent)" }}>Light mobility work:</p>

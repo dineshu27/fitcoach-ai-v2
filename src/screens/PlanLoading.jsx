@@ -68,7 +68,7 @@ export default function PlanLoading() {
         animate={{ opacity: [0.8, 1, 0.8] }}
         transition={{ duration: 2, repeat: Infinity }}
       >
-        🤖 REX is building your plan...
+        ⚡ APEX is building your plan...
       </motion.div>
 
       {/* Progress bar */}

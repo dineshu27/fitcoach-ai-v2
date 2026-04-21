@@ -10,6 +10,7 @@ export default defineConfig({
     coverage: { reporter: ["text", "json-summary"] },
   },
   server: {
+    allowedHosts: true,
     proxy: {
       "/api/claude": {
         target: "https://api.anthropic.com",
@@ -25,9 +26,9 @@ export default defineConfig({
     VitePWA({
       registerType: "autoUpdate",
       manifest: {
-        name: "FitCoach AI",
-        short_name: "FitCoach",
-        description: "Your AI-powered personal fitness and nutrition coach",
+        name: "AI Fit Training",
+        short_name: "AIFit",
+        description: "AI-powered personal fitness and nutrition training coach",
         theme_color: "#6C63FF",
         background_color: "#0A0A0F",
         display: "standalone",

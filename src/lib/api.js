@@ -1,5 +1,5 @@
-const API_KEY = import.meta.env.VITE_ANTHROPIC_API_KEY;
-const API_URL = import.meta.env.DEV ? "/api/claude" : "https://api.anthropic.com/v1/messages";
+// Always route through the serverless proxy — API key stays server-side.
+const API_URL = "/api/claude";
 
 // Sanitize user-supplied strings before embedding in prompts
 function sanitizeInput(str, maxLen = 200) {
@@ -26,9 +26,6 @@ async function claudeCall(messages, system = null, maxTokens = 1000, timeoutMs =
       signal: controller.signal,
       headers: {
         "Content-Type": "application/json",
-        "x-api-key": API_KEY,
-        "anthropic-version": "2023-06-01",
-        "anthropic-dangerous-direct-browser-access": "true",
       },
       body: JSON.stringify(body),
     });

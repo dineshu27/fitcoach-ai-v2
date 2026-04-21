@@ -391,17 +391,34 @@ function EthnicitySuggestions({ ethnicity, onChipTap }) {
 /* ── Exercise Item (with inline edit) ──────────────────────────────── */
 function ExerciseItem({ name, detail, done, onToggle }) {
   const [editing, setEditing] = useState(false);
-  const [weight, setWeight] = useState("");
-  const [reps,   setReps]   = useState("");
-  const [saved,  setSaved]  = useState(false);
+
+  // Parse defaults from cache first, then fall back to plan detail
+  const [weight, setWeight] = useState(() => {
+    const cached = cache.getExerciseLog(name);
+    return cached?.[0]?.weight || "";
+  });
+  const [reps, setReps] = useState(() => {
+    const cached = cache.getExerciseLog(name);
+    if (cached?.[0]?.reps) return String(cached[0].reps);
+    // Parse default reps from plan detail e.g. "3 × 10" → "10"
+    return detail?.split("×")[1]?.trim() || "";
+  });
+  // Persist the saved note so it doesn't revert to predefined detail
+  const [savedNote, setSavedNote] = useState(() => {
+    const cached = cache.getExerciseLog(name);
+    return cached?.[0]?.note || null;
+  });
 
   function saveEdit() {
     const note = [weight ? `${weight}kg` : "", reps ? `${reps} reps` : ""].filter(Boolean).join(" · ");
-    if (note) cache.logExerciseSet(name, [{ set: 1, weight, reps: parseInt(reps) || 0, done: true, note }]);
-    setSaved(true);
+    if (note) {
+      cache.logExerciseSet(name, [{ set: 1, weight, reps: parseInt(reps) || 0, done: true, note }]);
+      setSavedNote(note);
+    }
     setEditing(false);
-    setTimeout(() => setSaved(false), 2000);
   }
+
+  const displayDetail = savedNote || detail;
 
   return (
     <div className="rounded-xl overflow-hidden transition-all"
@@ -423,9 +440,9 @@ function ExerciseItem({ name, detail, done, onToggle }) {
             style={{ color: done ? "var(--c-sub)" : "var(--c-text)", textDecoration: done ? "line-through" : "none" }}>
             {name}
           </p>
-          {(detail || saved) && (
-            <p className="text-[10px]" style={{ color: saved ? "#34D399" : "var(--c-sub)" }}>
-              {saved ? "Saved!" : detail}
+          {displayDetail && (
+            <p className="text-[10px]" style={{ color: savedNote ? "#34D399" : "var(--c-sub)" }}>
+              {displayDetail}
             </p>
           )}
         </div>
@@ -460,6 +477,17 @@ function ExerciseItem({ name, detail, done, onToggle }) {
   );
 }
 
+/* ── Calorie burn estimator ─────────────────────────────────────────── */
+const BURN_HIGH  = ["deadlift","squat","clean","thruster","snatch","row","pull","press","bench","lunge","rdl","hip thrust","split squat","step up","leg press"];
+const BURN_MED   = ["curl","extension","raise","fly","kickback","dip","push","crunch","plank","row"];
+function estimateBurn(name, sets = 3) {
+  const n = (name || "").toLowerCase();
+  const kcalPerSet = BURN_HIGH.some(k => n.includes(k)) ? 10
+    : BURN_MED.some(k => n.includes(k)) ? 5
+    : 7;
+  return kcalPerSet * sets;
+}
+
 /* ── Exercise Log ───────────────────────────────────────────────────── */
 function ExerciseLog({ plan }) {
   const jsDay = new Date().getDay();
@@ -489,8 +517,15 @@ function ExerciseLog({ plan }) {
     setCustomInput("");
   }
 
-  const allNames = [...planExercises.map(e => e.name), ...customList];
+  const allExercises = [
+    ...planExercises.map(e => ({ name: e.name, sets: e.sets || 3 })),
+    ...customList.map(name => ({ name, sets: 3 })),
+  ];
+  const allNames = allExercises.map(e => e.name);
   const doneCount = allNames.filter(n => doneSet.has(n)).length;
+  const totalBurn = allExercises
+    .filter(e => doneSet.has(e.name))
+    .reduce((sum, e) => sum + estimateBurn(e.name, e.sets), 0);
 
   return (
     <div className="rounded-2xl overflow-hidden"
@@ -500,15 +535,24 @@ function ExerciseLog({ plan }) {
           <Dumbbell size={15} style={{ color: "var(--c-accent)" }} />
           <span className="text-sm font-bold" style={{ color: "var(--c-text)" }}>Exercise Log</span>
         </div>
-        {allNames.length > 0 && (
-          <span className="rounded-full px-2.5 py-0.5 text-xs font-bold"
-            style={{
-              background: doneCount === allNames.length ? "rgba(78,205,196,0.15)" : "var(--c-accent-bg)",
-              color: doneCount === allNames.length ? "#4ECDC4" : "var(--c-accent)",
-            }}>
-            {doneCount}/{allNames.length} done
-          </span>
-        )}
+        <div className="flex items-center gap-2">
+          {totalBurn > 0 && (
+            <span className="flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-bold"
+              style={{ background: "rgba(252,163,17,0.12)", color: "var(--c-warn)" }}>
+              <Flame size={11} />
+              ~{totalBurn} kcal
+            </span>
+          )}
+          {allNames.length > 0 && (
+            <span className="rounded-full px-2.5 py-0.5 text-xs font-bold"
+              style={{
+                background: doneCount === allNames.length ? "rgba(78,205,196,0.15)" : "var(--c-accent-bg)",
+                color: doneCount === allNames.length ? "#4ECDC4" : "var(--c-accent)",
+              }}>
+              {doneCount}/{allNames.length} done
+            </span>
+          )}
+        </div>
       </div>
       <div className="p-4 space-y-2.5">
         {isRest ? (

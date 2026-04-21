@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import REX from "../components/REX";
 import ChatBubble, { TypingIndicator } from "../components/ChatBubble";
 import { cache } from "../lib/cache";
-import { rexChat } from "../lib/api";
+import { rexChat, sanitizeInput } from "../lib/api";
 
 const QUICK_PROMPT_GROUPS = [
   {
@@ -105,7 +105,7 @@ export default function Coach() {
   }
 
   async function send(text) {
-    const q = (text || input).trim().slice(0, 500);
+    const q = sanitizeInput((text || input), 500);
     if (!q || loading) return;
     if (!cache.canChat()) {
       setMessages((m) => [...m, { role: "assistant", content: "You've used all 5 free chats today! Come back tomorrow for more. 🤖", id: Date.now() }]);

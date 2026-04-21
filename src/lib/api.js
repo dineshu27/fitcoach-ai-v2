@@ -2,7 +2,7 @@
 const API_URL = "/api/claude";
 
 // Sanitize user-supplied strings before embedding in prompts
-function sanitizeInput(str, maxLen = 200) {
+export function sanitizeInput(str, maxLen = 200) {
   if (typeof str !== "string") return "";
   return str
     .slice(0, maxLen)

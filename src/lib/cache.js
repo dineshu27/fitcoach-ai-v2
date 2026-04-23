@@ -1,4 +1,4 @@
-const PLAN_TTL = 7 * 24 * 60 * 60 * 1000;
+const PLAN_TTL = 30 * 24 * 60 * 60 * 1000;
 const MAX_ITEM_BYTES = 400 * 1024; // 400 KB per item
 
 const safeGet = (key) => { try { return JSON.parse(localStorage.getItem(key)); } catch { return null; } };

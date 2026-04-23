@@ -2,29 +2,24 @@ import { useId } from "react";
 import { motion } from "framer-motion";
 
 /* ══════════════════════════════════════════════════════════════
-   APEX — AI Fitness Energy Core
-   A living intelligence orb: pulsing ECG · neural spokes ·
-   orbital rings · state-reactive glow. No robot — pure AI energy.
+   FitCoach — Animated human coach SVG
+   States: idle · thinking · talking · celebrating · warning
 ══════════════════════════════════════════════════════════════ */
 
-const SIZES  = { xs: 0.42, sm: 0.58, md: 1, lg: 1.28 };
+const SIZES = { xs: 0.42, sm: 0.58, md: 1, lg: 1.28 };
 const BASE_W = 100;
-const BASE_H = 100;
+const BASE_H = 120;
 
 const COLORS = {
-  idle:        { eye:"#60A5FA", core:"#3B82F6", glow:"#1D4ED8", ring:"rgba(59,130,246,0.38)",  p:"#93C5FD" },
-  thinking:    { eye:"#38BDF8", core:"#0EA5E9", glow:"#0369A1", ring:"rgba(14,165,233,0.38)",  p:"#7DD3FC" },
-  talking:     { eye:"#A78BFA", core:"#8B5CF6", glow:"#6D28D9", ring:"rgba(139,92,246,0.38)",  p:"#C4B5FD" },
-  celebrating: { eye:"#34D399", core:"#10B981", glow:"#047857", ring:"rgba(52,211,153,0.44)",  p:"#6EE7B7" },
-  warning:     { eye:"#F87171", core:"#EF4444", glow:"#B91C1C", ring:"rgba(239,68,68,0.46)",   p:"#FCA5A5" },
-  happy:       { eye:"#34D399", core:"#10B981", glow:"#047857", ring:"rgba(52,211,153,0.40)",  p:"#6EE7B7" },
+  idle:        { shirt: "#FC4C02", glow: "rgba(252,76,2,0.25)",  skin: "#F5C5A0", hair: "#3D2B1F" },
+  thinking:    { shirt: "#0EA5E9", glow: "rgba(14,165,233,0.28)", skin: "#F5C5A0", hair: "#3D2B1F" },
+  talking:     { shirt: "#8B5CF6", glow: "rgba(139,92,246,0.28)", skin: "#F5C5A0", hair: "#3D2B1F" },
+  celebrating: { shirt: "#10B981", glow: "rgba(16,185,129,0.30)", skin: "#F5C5A0", hair: "#3D2B1F" },
+  warning:     { shirt: "#EF4444", glow: "rgba(239,68,68,0.32)",  skin: "#F5C5A0", hair: "#3D2B1F" },
 };
 
-// 6 neural spokes radiating from core (degrees)
-const SPOKES = [0, 60, 120, 180, 240, 300];
-
 export default function REX({ state = "idle", size = "md" }) {
-  const uid  = useId().replace(/:/g, "");
+  const uid = useId().replace(/:/g, "");
   const scale = SIZES[size] || 1;
   const c = COLORS[state] || COLORS.idle;
 
@@ -36,211 +31,192 @@ export default function REX({ state = "idle", size = "md" }) {
   const W = Math.round(BASE_W * scale);
   const H = Math.round(BASE_H * scale);
 
-  // Animation timing — speed up for active states
-  const pulse   = isTalking ? 0.30 : isWarning ? 0.38 : 2.2;
-  const orbit   = isThinking ? 1.3 : 5.2;
-  const ecg     = isTalking ? 0.68 : isThinking ? 0.92 : 1.85;
-  const breathe = 3.4;
-  const spkSpd  = isThinking ? 0.42 : 1.9;
+  const glowId = uid + "gl";
+  const bgId   = uid + "bg";
 
-  const HP  = "var(--rex-hull)";
+  // Arm animation for different states
+  const leftArmAnim  = isCelebrating
+    ? { rotate: [-30, -70, -30] }
+    : isTalking
+    ? { rotate: [-15, -30, -15] }
+    : { rotate: [-15, -20, -15] };
 
-  // Filter / clip IDs (unique per instance to avoid SVG collisions)
-  const gfId   = uid + "gf";
-  const bfId   = uid + "bf";
-  const afId   = uid + "af";
-  const clipId = uid + "oc";
-  const orbGId = uid + "orbG";
-  const cGId   = uid + "cG";
+  const rightArmAnim = isCelebrating
+    ? { rotate: [30, 70, 30] }
+    : isTalking
+    ? { rotate: [15, 30, 15] }
+    : { rotate: [15, 20, 15] };
+
+  const armDuration = isCelebrating ? 0.5 : isTalking ? 0.7 : 2.4;
 
   return (
     <div style={{ width: W, height: H, flexShrink: 0 }}>
-      <svg viewBox="0 0 100 100" width={W} height={H} overflow="visible">
+      <svg viewBox="0 0 100 120" width={W} height={H} overflow="visible">
         <defs>
-          {/* Node glow */}
-          <filter id={gfId} x="-80%" y="-80%" width="260%" height="260%">
-            <feGaussianBlur stdDeviation="3" result="b"/>
+          <filter id={glowId} x="-60%" y="-60%" width="220%" height="220%">
+            <feGaussianBlur stdDeviation="4" result="b"/>
             <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
           </filter>
-          {/* Core bloom */}
-          <filter id={bfId} x="-120%" y="-120%" width="340%" height="340%">
-            <feGaussianBlur stdDeviation="7"/>
-          </filter>
-          {/* Ambient haze */}
-          <filter id={afId} x="-150%" y="-150%" width="400%" height="400%">
-            <feGaussianBlur stdDeviation="18"/>
-          </filter>
-
-          {/* Sphere top-left sheen */}
-          <radialGradient id={orbGId} cx="36%" cy="30%" r="68%">
-            <stop offset="0%"   stopColor="rgba(255,255,255,0.22)"/>
-            <stop offset="55%"  stopColor="rgba(255,255,255,0.04)"/>
-            <stop offset="100%" stopColor="rgba(0,0,0,0)"/>
+          <radialGradient id={bgId} cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor={c.glow} />
+            <stop offset="100%" stopColor="transparent" />
           </radialGradient>
-
-          {/* Core radial fill */}
-          <radialGradient id={cGId} cx="38%" cy="34%" r="65%">
-            <stop offset="0%"   stopColor="white"  stopOpacity="1"/>
-            <stop offset="35%"  stopColor={c.eye}  stopOpacity="1"/>
-            <stop offset="100%" stopColor={c.core} stopOpacity="0.72"/>
-          </radialGradient>
-
-          {/* ECG clipped to orb interior */}
-          <clipPath id={clipId}>
-            <circle cx="50" cy="50" r="29"/>
-          </clipPath>
         </defs>
 
-        {/* ── Ambient background haze ────────────── */}
-        <motion.circle cx="50" cy="50" r="50"
-          fill={c.glow} filter={`url(#${afId})`}
-          animate={{ opacity: isWarning?[0.40,0.70,0.40] : isCelebrating?[0.22,0.48,0.22] : [0.07,0.20,0.07] }}
-          transition={{ duration: pulse, repeat: Infinity, ease: "easeInOut" }}
+        {/* Background glow blob */}
+        <motion.ellipse cx="50" cy="75" rx="42" ry="38"
+          fill={`url(#${bgId})`}
+          animate={{ opacity: [0.6, 1, 0.6], ry: [38, 42, 38] }}
+          transition={{ duration: 2.8, repeat: Infinity, ease: "easeInOut" }}
         />
 
-        {/* ── Outer orbit ring (slow / fast when thinking) ── */}
-        <motion.g style={{ transformOrigin: "50px 50px" }}
-          animate={{ rotate: 360 }}
-          transition={{ duration: orbit, repeat: Infinity, ease: "linear" }}
+        {/* ── Body (shirt) ──────────────────────────────── */}
+        <motion.g
+          animate={isWarning ? { x: [-3, 3, -3, 3, 0] } : undefined}
+          transition={isWarning ? { duration: 0.3, repeat: Infinity } : undefined}
         >
-          <circle cx="50" cy="50" r="46"
-            fill="none" stroke={c.ring} strokeWidth="0.7" strokeDasharray="9 7"/>
-          {/* Travelling bright dot */}
-          <motion.circle cx="96" cy="50" r="2.8"
-            fill={c.eye} filter={`url(#${gfId})`}
-            animate={{ opacity: [0.55, 1, 0.55] }}
-            transition={{ duration: 1.4, repeat: Infinity }}
-          />
+          {/* Torso */}
+          <rect x="34" y="66" width="32" height="34" rx="8"
+            fill={c.shirt} />
+
+          {/* Shirt collar V */}
+          <path d="M 45 66 L 50 75 L 55 66" fill="none" stroke="rgba(255,255,255,0.35)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+
+          {/* FitCoach text on shirt — only md/lg sizes */}
+          {scale >= 0.9 && (
+            <text x="50" y="88" textAnchor="middle" fontSize="6.5" fontWeight="800"
+              fontFamily="Space Grotesk, sans-serif" fill="rgba(255,255,255,0.90)"
+              letterSpacing="0.3">FitCoach</text>
+          )}
+
+          {/* Shorts */}
+          <rect x="34" y="96" width="14" height="10" rx="4" fill={c.shirt} opacity="0.7"/>
+          <rect x="52" y="96" width="14" height="10" rx="4" fill={c.shirt} opacity="0.7"/>
+
+          {/* ── Left arm (viewer's right) ─────────────── */}
+          <motion.g style={{ transformOrigin: "34px 72px" }}
+            animate={leftArmAnim}
+            transition={{ duration: armDuration, repeat: Infinity, ease: "easeInOut" }}
+          >
+            <rect x="22" y="66" width="12" height="22" rx="6" fill={c.shirt}/>
+            {/* Hand */}
+            <circle cx="28" cy="90" r="5.5" fill={c.skin}/>
+          </motion.g>
+
+          {/* ── Right arm ─────────────────────────────── */}
+          <motion.g style={{ transformOrigin: "66px 72px" }}
+            animate={rightArmAnim}
+            transition={{ duration: armDuration, repeat: Infinity, ease: "easeInOut", delay: 0.15 }}
+          >
+            <rect x="66" y="66" width="12" height="22" rx="6" fill={c.shirt}/>
+            {/* Hand */}
+            <circle cx="72" cy="90" r="5.5" fill={c.skin}/>
+          </motion.g>
+
+          {/* Legs */}
+          <rect x="36" y="106" width="11" height="12" rx="5" fill="#2D2520"/>
+          <rect x="53" y="106" width="11" height="12" rx="5" fill="#2D2520"/>
+          {/* Shoes */}
+          <ellipse cx="42" cy="118" rx="8" ry="4" fill="#1A1410"/>
+          <ellipse cx="58" cy="118" rx="8" ry="4" fill="#1A1410"/>
         </motion.g>
 
-        {/* ── Second counter-ring (idle/celebrate only) ───── */}
-        {!isThinking && !isWarning && (
-          <motion.g style={{ transformOrigin: "50px 50px" }}
-            animate={{ rotate: -360 }}
-            transition={{ duration: orbit * 1.6, repeat: Infinity, ease: "linear" }}
-          >
-            <circle cx="50" cy="50" r="39"
-              fill="none" stroke={c.ring} strokeWidth="0.5" strokeDasharray="5 12" opacity="0.45"/>
-          </motion.g>
-        )}
-
-        {/* ── Thinking: fast scan arc ───────────────────── */}
-        {isThinking && (
-          <motion.g style={{ transformOrigin: "50px 50px" }}
-            animate={{ rotate: 360 }}
-            transition={{ duration: 0.85, repeat: Infinity, ease: "linear" }}
-          >
-            <circle cx="50" cy="50" r="38"
-              fill="none" stroke={c.eye} strokeWidth="2"
-              strokeDasharray="28 72" strokeLinecap="round" opacity="0.88"
-            />
-          </motion.g>
-        )}
-
-        {/* ── Main orb body — warning shake wrapper ─────── */}
+        {/* ── Head ──────────────────────────────────────── */}
         <motion.g
-          animate={isWarning ? { x: [-4, 4, -4, 4, 0] } : undefined}
-          transition={isWarning ? { duration: 0.34, repeat: Infinity } : undefined}
+          animate={isThinking
+            ? { y: [-1, -3, -1] }
+            : isCelebrating
+            ? { y: [-2, -5, -2], rotate: [-5, 5, -5] }
+            : { y: [0, -1, 0] }}
+          transition={{ duration: isCelebrating ? 0.5 : 2.2, repeat: Infinity, ease: "easeInOut" }}
+          style={{ transformOrigin: "50px 50px" }}
         >
-          {/* Orb fill */}
-          <circle cx="50" cy="50" r="30" style={{ fill: HP }}
-            stroke={c.eye} strokeWidth="1.5" strokeOpacity="0.50"
+          {/* Neck */}
+          <rect x="45" y="56" width="10" height="12" rx="4" fill={c.skin}/>
+
+          {/* Head shape */}
+          <ellipse cx="50" cy="44" rx="18" ry="19" fill={c.skin}/>
+
+          {/* Hair */}
+          <ellipse cx="50" cy="28" rx="18" ry="10" fill={c.hair}/>
+          <ellipse cx="34" cy="40" rx="5" ry="12" fill={c.hair}/>
+          <ellipse cx="66" cy="40" rx="5" ry="12" fill={c.hair}/>
+
+          {/* Eyes */}
+          <motion.ellipse cx="42" cy="44" rx="3.5" ry={isThinking ? 1.5 : 3}
+            fill="#2D1A0A"
+            animate={{ ry: isThinking ? [3, 1, 3] : isCelebrating ? [3, 3.5, 3] : [3, 0.4, 3] }}
+            transition={{ duration: isThinking ? 1.2 : 3.5, repeat: Infinity, ease: "easeInOut" }}
           />
-          {/* Sphere sheen */}
-          <circle cx="50" cy="50" r="30" fill={`url(#${orbGId})`}/>
+          <motion.ellipse cx="58" cy="44" rx="3.5" ry={isThinking ? 1.5 : 3}
+            fill="#2D1A0A"
+            animate={{ ry: isThinking ? [3, 1, 3] : isCelebrating ? [3, 3.5, 3] : [3, 0.4, 3] }}
+            transition={{ duration: isThinking ? 1.2 : 3.5, repeat: Infinity, ease: "easeInOut", delay: 0.05 }}
+          />
 
-          {/* ── ECG heartbeat line ─────────────────────── */}
-          <g clipPath={`url(#${clipId})`}>
-            <motion.path
-              d="M 12 50 L 26 50 L 31 50 L 36 39 L 42 62 L 47 43 L 52 50 L 88 50"
-              fill="none" stroke={c.eye} strokeWidth="1.8" strokeLinecap="round"
-              strokeDasharray="92"
-              animate={{ strokeDashoffset: [92, 0, -92] }}
-              transition={{ duration: ecg, repeat: Infinity, ease: "linear" }}
+          {/* Eye shine dots */}
+          <circle cx="43.5" cy="42.5" r="1" fill="white" opacity="0.85"/>
+          <circle cx="59.5" cy="42.5" r="1" fill="white" opacity="0.85"/>
+
+          {/* Eyebrows */}
+          <motion.path d="M 39 38 Q 42 36.5 45 38"
+            fill="none" stroke={c.hair} strokeWidth="2" strokeLinecap="round"
+            animate={isThinking ? { d: ["M 39 38 Q 42 36 45 38", "M 39 37 Q 42 36 45 38", "M 39 38 Q 42 36 45 38"] } : undefined}
+            transition={{ duration: 1.0, repeat: Infinity }}
+          />
+          <motion.path d="M 55 38 Q 58 36.5 61 38"
+            fill="none" stroke={c.hair} strokeWidth="2" strokeLinecap="round"
+            animate={isThinking ? { d: ["M 55 38 Q 58 36 61 38", "M 55 37 Q 58 36 61 38", "M 55 38 Q 58 36 61 38"] } : undefined}
+            transition={{ duration: 1.0, repeat: Infinity, delay: 0.1 }}
+          />
+
+          {/* Mouth */}
+          <motion.path
+            d={isCelebrating
+              ? "M 44 52 Q 50 57 56 52"
+              : isWarning
+              ? "M 44 54 Q 50 51 56 54"
+              : isTalking
+              ? "M 44 52 Q 50 55 56 52"
+              : "M 44 52 Q 50 55 56 52"}
+            fill="none" stroke="#8B4A2A" strokeWidth="1.8" strokeLinecap="round"
+            animate={isTalking ? { d: ["M 44 52 Q 50 55 56 52", "M 44 52 Q 50 57 56 52", "M 44 52 Q 50 55 56 52"] } : undefined}
+            transition={{ duration: 0.55, repeat: Infinity }}
+          />
+
+          {/* Thinking bubble dots */}
+          {isThinking && [0, 1, 2].map(i => (
+            <motion.circle key={i}
+              cx={62 + i * 6} cy={28 - i * 4} r={2 - i * 0.4}
+              fill={c.shirt}
+              animate={{ opacity: [0.2, 1, 0.2] }}
+              transition={{ duration: 0.8, repeat: Infinity, delay: i * 0.22 }}
             />
-          </g>
+          ))}
 
-          {/* ── Neural spokes ──────────────────────────── */}
-          {SPOKES.map((deg, i) => {
-            const rad = (deg * Math.PI) / 180;
+          {/* Celebrating stars */}
+          {isCelebrating && [0, 1, 2, 3].map(i => {
+            const angle = (i / 4) * Math.PI * 2;
+            const sx = 50 + Math.cos(angle) * 28;
+            const sy = 30 + Math.sin(angle) * 20;
             return (
-              <motion.line key={i}
-                x1={50 + Math.cos(rad) * 11} y1={50 + Math.sin(rad) * 11}
-                x2={50 + Math.cos(rad) * 22} y2={50 + Math.sin(rad) * 22}
-                stroke={c.eye} strokeWidth="0.95" strokeLinecap="round"
-                animate={{ opacity: [0.10, 0.80, 0.10] }}
-                transition={{ duration: spkSpd, repeat: Infinity, delay: i * 0.15, ease: "easeInOut" }}
-              />
+              <motion.text key={i} x={sx} y={sy} fontSize="8" textAnchor="middle"
+                animate={{ opacity: [0, 1, 0], y: [sy, sy - 10, sy - 18] }}
+                transition={{ duration: 0.9, repeat: Infinity, delay: i * 0.22 }}>
+                ★
+              </motion.text>
             );
           })}
-
-          {/* ── Core bloom halo ────────────────────────── */}
-          <motion.circle cx="50" cy="50" r="11"
-            fill={c.core} filter={`url(#${bfId})`}
-            animate={{ opacity: [0.38, 0.88, 0.38], r: [11, 14, 11] }}
-            transition={{ duration: pulse, repeat: Infinity, ease: "easeInOut" }}
-          />
-
-          {/* ── Core solid ─────────────────────────────── */}
-          <circle cx="50" cy="50" r="9" fill={`url(#${cGId})`}/>
-
-          {/* ── Centre point ───────────────────────────── */}
-          <circle cx="50" cy="50" r="3.2" fill="white" opacity="0.96"/>
-
-          {/* ── Breathing outer stroke pulse ───────────── */}
-          <motion.circle cx="50" cy="50" r="30"
-            fill="none" stroke={c.core} strokeWidth="1.2"
-            animate={{ opacity: [0.12, 0.50, 0.12] }}
-            transition={{ duration: breathe, repeat: Infinity, ease: "easeInOut" }}
-          />
         </motion.g>
 
-        {/* ── Talking: concentric ripple rings ──────────── */}
-        {isTalking && [1, 2, 3].map(i => (
-          <motion.circle key={i} cx="50" cy="50" r="30"
-            fill="none" stroke={c.eye} strokeWidth="1.6"
-            animate={{ r: [30, 30 + i * 9], opacity: [0.58, 0] }}
-            transition={{ duration: 0.92, repeat: Infinity, delay: i * 0.27, ease: "easeOut" }}
-          />
-        ))}
-
-        {/* ── Warning: red flash ring ────────────────────── */}
-        {isWarning && (
-          <motion.circle cx="50" cy="50" r="30"
-            fill="none" stroke="#F87171" strokeWidth="3.5"
-            animate={{ opacity: [0.92, 0] }}
-            transition={{ duration: 0.40, repeat: Infinity, ease: "easeOut" }}
+        {/* Whistle / coach detail */}
+        {(state === "idle" || state === "talking") && scale >= 0.9 && (
+          <motion.ellipse cx="50" cy="63" rx="3.5" ry="2.5"
+            fill="#FFD700" stroke="#C9A800" strokeWidth="0.8"
+            animate={{ opacity: [0.7, 1, 0.7] }}
+            transition={{ duration: 2.0, repeat: Infinity }}
           />
         )}
-
-        {/* ── Celebrating: radial burst particles ─────────── */}
-        {isCelebrating && [0,1,2,3,4,5,6,7,8,9,10,11].map(i => {
-          const a  = (i / 12) * Math.PI * 2;
-          const sx = 50 + Math.cos(a) * 32, sy = 50 + Math.sin(a) * 32;
-          const ex = 50 + Math.cos(a) * 60, ey = 50 + Math.sin(a) * 60;
-          const r  = i % 3 === 0 ? 3.5 : 2;
-          return (
-            <motion.circle key={i} cx={sx} cy={sy} r={r}
-              fill={i % 2 === 0 ? c.eye : "#FFFFFF"}
-              animate={{ cx: [sx, ex], cy: [sy, ey], opacity: [1, 0], r: [r, 0.4] }}
-              transition={{ duration: 0.88, repeat: Infinity, delay: i * 0.07, ease: "easeOut" }}
-            />
-          );
-        })}
-
-        {/* ── Idle: 3 soft orbit dots ────────────────────── */}
-        {!isThinking && !isTalking && !isCelebrating && !isWarning && [0, 1, 2].map(i => {
-          const a = (i / 3) * Math.PI * 2 + 0.6;
-          return (
-            <motion.circle key={i}
-              cx={50 + Math.cos(a) * 44} cy={50 + Math.sin(a) * 44}
-              r="2.2" fill={c.p}
-              animate={{ opacity: [0.10, 0.65, 0.10], r: [2.2, 3.4, 2.2] }}
-              transition={{ duration: 2.7, repeat: Infinity, delay: i * 0.75 }}
-            />
-          );
-        })}
-
       </svg>
     </div>
   );

@@ -123,8 +123,15 @@ export default function Coach() {
       setMessages((m) => [...m, { role: "assistant", content: replyText, id: Date.now() + 1 }]);
       const result = executeAction(action);
       if (result) showToast(result);
-    } catch {
-      setMessages((m) => [...m, { role: "assistant", content: "My circuits are a bit scrambled right now. Check your connection and try again! 🤖", id: Date.now() + 1 }]);
+    } catch (err) {
+      const msg = err?.message?.includes("timeout") || err?.message?.includes("504")
+        ? "Request timed out — the AI took too long. Try a shorter question!"
+        : err?.message?.includes("401") || err?.message?.includes("403")
+        ? "Authentication error. Please check back soon!"
+        : err?.message?.includes("429")
+        ? "Too many requests — take a breath and try again in a moment!"
+        : "Couldn't reach the server. Check your connection and try again.";
+      setMessages((m) => [...m, { role: "assistant", content: msg, id: Date.now() + 1 }]);
     } finally {
       setLoading(false);
     }
@@ -134,8 +141,8 @@ export default function Coach() {
     <div className="flex flex-col coach-grid" style={{ height: "100svh", background: "var(--c-bg)" }}>
 
       {/* ── Header ──────────────────────────────────────────────────── */}
-      <div className="flex-shrink-0 flex items-center gap-2 px-4 pt-safe pt-3 pb-3"
-        style={{ borderBottom: "1px solid var(--c-border)", background: "var(--c-nav)", backdropFilter: "blur(20px)" }}>
+      <div className="flex-shrink-0 flex items-center gap-2 px-4 pb-3"
+        style={{ borderBottom: "1px solid var(--c-border)", background: "var(--c-nav)", backdropFilter: "blur(20px)", paddingTop: "max(env(safe-area-inset-top), 12px)" }}>
         {/* Back button */}
         <button onClick={() => navigate(-1)}
           className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl transition-all active:scale-90"

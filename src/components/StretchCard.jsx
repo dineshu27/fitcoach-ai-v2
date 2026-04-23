@@ -110,12 +110,15 @@ export default function StretchCard({ type, workoutFocus }) {
 
   // Pick the most relevant video based on workout focus
   const focus = (workoutFocus || "").toLowerCase();
+  const isUpper = focus.includes("upper") || focus.includes("chest") || focus.includes("back")
+    || focus.includes("shoulder") || focus.includes("push") || focus.includes("pull")
+    || focus.includes("bicep") || focus.includes("tricep") || focus.includes("arm");
+  const isLower = focus.includes("lower") || focus.includes("leg") || focus.includes("quad")
+    || focus.includes("glute") || focus.includes("hamstring") || focus.includes("calf")
+    || focus.includes("squat") || focus.includes("deadlift");
   let primary = videos[0];
-  if (focus.includes("upper") || focus.includes("chest") || focus.includes("back") || focus.includes("shoulder")) {
-    primary = videos[1] || videos[0];
-  } else if (focus.includes("lower") || focus.includes("leg") || focus.includes("quad") || focus.includes("glute")) {
-    primary = videos[2] || videos[0];
-  }
+  if (isUpper) primary = videos[1] || videos[0];
+  else if (isLower) primary = videos[2] || videos[0];
 
   return (
     <>

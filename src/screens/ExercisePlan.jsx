@@ -43,7 +43,7 @@ export default function ExercisePlan() {
   return (
     <div className="min-h-screen pb-nav" style={{ background: "var(--c-bg)" }}>
       {/* Header */}
-      <div className="px-4 pt-safe pt-6 pb-4" style={{ borderBottom: "1px solid var(--c-border)" }}>
+      <div className="px-4 safe-top pt-6 pb-4" style={{ borderBottom: "1px solid var(--c-border)" }}>
         <h1 className="text-2xl font-bold" style={{ color: "var(--c-text)" }}>Exercise Plan</h1>
         <div className="flex items-center gap-2 mt-0.5">
           <p className="text-sm" style={{ color: "var(--c-sub)" }}>{profile?.daysPerWeek} workout days/week</p>

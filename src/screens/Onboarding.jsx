@@ -134,7 +134,7 @@ export default function Onboarding() {
   return (
     <div className="flex min-h-screen flex-col" style={{ background: "var(--c-bg)" }}>
       {/* Header */}
-      <div className="px-4 pt-safe pt-6 pb-4" style={{ borderBottom: "1px solid rgba(var(--c-accent-rgb),0.12)" }}>
+      <div className="px-4 safe-top pt-6 pb-4" style={{ borderBottom: "1px solid rgba(var(--c-accent-rgb),0.12)" }}>
         <div className="flex items-center gap-3">
           {step > 0 && (
             <button onClick={() => setStep(step - 1)} className="rounded-xl p-2 transition-all"

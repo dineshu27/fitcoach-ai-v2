@@ -102,8 +102,8 @@ function ActivityCalendar() {
     const hasFood = (log.foods?.length || 0) > 0;
     const hasEx   = (log.doneExercises?.length || 0) > 0;
     if (hasFood && hasEx) return "#22C55E";   // green — fully logged
-    if (hasFood)  return "#4ADE80";           // lighter green — food only
-    if (hasEx)    return "#86EFAC";           // even lighter — exercise only
+    if (hasEx)    return "#F97316";           // orange — exercise only
+    if (hasFood)  return "#EAB308";           // yellow — food only
     if (cache.isDaySkipped(ds)) return "rgba(100,100,130,0.2)";
     return "var(--c-pill-inactive)";
   }
@@ -157,9 +157,9 @@ function ActivityCalendar() {
       {/* Legend */}
       <div className="flex flex-wrap gap-3 mt-3">
         {[
-          { color: "#22C55E", label: "Full day logged" },
-          { color: "#4ADE80", label: "Food logged" },
-          { color: "#86EFAC", label: "Exercise only" },
+          { color: "#22C55E", label: "Food + Exercise" },
+          { color: "#F97316", label: "Exercise only" },
+          { color: "#EAB308", label: "Food only" },
           { color: "var(--c-pill-inactive)", label: "Not logged" },
         ].map(({ color, label }) => (
           <div key={label} className="flex items-center gap-1">
@@ -318,7 +318,7 @@ export default function Profile() {
   return (
     <div className="min-h-screen pb-nav" style={{ background: "var(--c-bg)" }}>
       {/* Header */}
-      <div className="px-4 pt-safe pt-6 pb-6"
+      <div className="px-4 safe-top pt-6 pb-6"
         style={{ background: "linear-gradient(180deg, var(--c-accent-bg) 0%, transparent 100%)", borderBottom: "1px solid var(--c-border)" }}>
         <div className="flex items-center gap-4">
           <div className="flex h-20 w-20 items-center justify-center rounded-full text-2xl font-extrabold flex-shrink-0"

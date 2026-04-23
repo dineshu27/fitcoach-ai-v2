@@ -770,7 +770,7 @@ export default function TodayLog({ preloadExercise }) {
   return (
     <div className="min-h-screen pb-nav" style={{ background: "var(--c-bg)" }}>
       {/* Header */}
-      <div className="px-4 pt-safe pt-6 pb-4" style={{ background: "var(--c-surface)", borderBottom: "1px solid var(--c-border)" }}>
+      <div className="px-4 safe-top pt-6 pb-4" style={{ background: "var(--c-surface)", borderBottom: "1px solid var(--c-border)" }}>
         <h1 className="text-2xl font-bold" style={{ color: "var(--c-text)" }}>Today's Log</h1>
         <p className="text-sm mt-0.5" style={{ color: "var(--c-sub)" }}>{dateStr}</p>
       </div>

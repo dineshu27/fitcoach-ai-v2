@@ -226,9 +226,9 @@ export default function Dashboard() {
       {/* ── Premium hero ──────────────────────────────────────────── */}
       <div style={{ background: "var(--c-card)", borderBottom: "1px solid var(--c-border)" }}>
         {/* Gradient accent bar */}
-        <div style={{ height: 3, background: "linear-gradient(90deg, var(--c-accent) 0%, #C4B5FD 50%, var(--c-cool) 100%)" }} />
+        <div style={{ height: 3, background: "linear-gradient(90deg, #FC4C02 0%, #FBBF24 50%, #FC4C02 100%)" }} />
 
-        <div className="px-4 pt-safe pt-4 pb-4">
+        <div className="px-4 safe-top pt-4 pb-4">
           {/* Top row: date + theme toggle */}
           <div className="flex items-center justify-between mb-3">
             <p className="text-xs font-medium" style={{ color: "var(--c-sub)" }}>{dateStr}</p>
@@ -331,13 +331,13 @@ export default function Dashboard() {
           {[
             {
               icon: "🔥", label: "Calories",
-              value: `${loggedCal}`, sub: `/ ${plan.calories} kcal`,
-              color: "#F87171", bg: "rgba(248,113,113,0.1)", border: "rgba(248,113,113,0.25)",
+              value: `${loggedCal}`, sub: `/ ${plan.calories}`,
+              color: "#FC4C02", bg: "rgba(252,76,2,0.10)", border: "rgba(252,76,2,0.25)",
               pct: Math.min(loggedCal / plan.calories, 1),
             },
             {
               icon: "💧", label: "Water",
-              value: `${waterGlasses}`, sub: `/ ${waterTarget} glasses`,
+              value: `${waterGlasses}`, sub: `/ ${waterTarget} gl`,
               color: "#38BDF8", bg: "rgba(56,189,248,0.1)", border: "rgba(56,189,248,0.25)",
               pct: Math.min(waterGlasses / waterTarget, 1),
             },
@@ -350,18 +350,29 @@ export default function Dashboard() {
               pct: null,
             },
           ].map(({ icon, label, value, sub, color, bg, border, pct }) => (
-            <div key={label} className="rounded-2xl p-3"
+            <div key={label} className="rounded-2xl p-3 flex flex-col"
               style={{ background: bg, border: `1px solid ${border}`, boxShadow: "var(--c-card-shadow)" }}>
-              <p className="text-lg leading-none mb-1">{icon}</p>
-              <p className="text-lg font-extrabold leading-tight" style={{ color }}>{value}</p>
-              <p className="text-[9px] font-semibold mt-0.5 leading-tight" style={{ color }}>{label}</p>
-              <p className="text-[9px] mt-0.5" style={{ color: "var(--c-sub)" }}>{sub}</p>
+              <p className="text-base leading-none mb-1">{icon}</p>
+              <p className="text-[17px] font-extrabold leading-tight tabular-nums" style={{ color }}>{value}</p>
+              <p className="text-[9px] font-bold mt-0.5 uppercase tracking-wide" style={{ color }}>{label}</p>
+              <p className="text-[9px] mt-0.5 leading-tight" style={{ color: "var(--c-sub)" }}>{sub}</p>
               {pct !== null && (
-                <div className="mt-2 h-1 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.15)" }}>
-                  <motion.div className="h-full rounded-full"
-                    style={{ background: color }}
-                    initial={{ width: 0 }} animate={{ width: `${pct * 100}%` }}
-                    transition={{ duration: 0.6 }} />
+                <div className="mt-2.5">
+                  {/* Segmented progress bar */}
+                  <div className="flex gap-0.5 mb-1">
+                    {Array.from({ length: 10 }).map((_, i) => (
+                      <motion.div key={i}
+                        className="flex-1 rounded-full"
+                        style={{ height: 4, background: i / 10 < pct ? color : "rgba(255,255,255,0.12)" }}
+                        initial={{ scaleY: 0 }}
+                        animate={{ scaleY: 1 }}
+                        transition={{ duration: 0.3, delay: i * 0.04 }}
+                      />
+                    ))}
+                  </div>
+                  <p className="text-[9px] font-bold text-right" style={{ color }}>
+                    {Math.round(pct * 100)}%
+                  </p>
                 </div>
               )}
             </div>

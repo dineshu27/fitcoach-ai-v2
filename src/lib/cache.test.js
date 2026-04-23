@@ -17,8 +17,8 @@ describe("cache.savePlan / getPlan", () => {
     expect(cache.getPlan()).toBeNull();
   });
 
-  it("returns null when plan is older than 7 days", () => {
-    const old = JSON.stringify({ data: { weekPlan: [] }, ts: Date.now() - 8 * 24 * 60 * 60 * 1000 });
+  it("returns null when plan is older than 30 days", () => {
+    const old = JSON.stringify({ data: { weekPlan: [] }, ts: Date.now() - 31 * 24 * 60 * 60 * 1000 });
     localStorage.setItem("fc_plan", old);
     expect(cache.getPlan()).toBeNull();
   });

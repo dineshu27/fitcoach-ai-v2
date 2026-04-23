@@ -116,13 +116,12 @@ describe("generateWeeklyPlan", () => {
     expect(plan).toBeTruthy();
   });
 
-  it("sends request with correct Anthropic headers", async () => {
+  it("sends request to server proxy with Content-Type header", async () => {
     mockFetchOk(JSON.stringify(VALID_PLAN));
     await generateWeeklyPlan(baseProfile, baseCalcs);
-    const headers = globalThis.fetch.mock.calls[0][1].headers;
-    expect(headers["x-api-key"]).toBeTruthy();
-    expect(headers["anthropic-version"]).toBe("2023-06-01");
-    expect(headers["Content-Type"]).toBe("application/json");
+    const [url, opts] = globalThis.fetch.mock.calls[0];
+    expect(url).toBe("/api/claude");
+    expect(opts.headers["Content-Type"]).toBe("application/json");
   });
 });
 

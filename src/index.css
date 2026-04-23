@@ -3,26 +3,26 @@
 @tailwind utilities;
 
 /* ══════════════════════════════════════════════════════════════
-   ARCTIC BLUE — Dark / Light / Auto theme
-   Option 3 — Arc Browser inspired
+   STRAVA FIRE — Dark / Light / Auto theme
+   Orange energy: #FC4C02 · warm charcoal · amber accents
 ══════════════════════════════════════════════════════════════ */
 
 /* ── DARK (default + explicit) ───────────────────────────────── */
 :root, [data-theme="dark"] {
-  --c-bg:            #080C14;
-  --c-surface:       #0D1525;
-  --c-card:          #111E33;
-  --c-text:          #E8F0FF;
-  --c-sub:           #6B82A8;
-  --c-border:        rgba(59,130,246,0.12);
-  --c-border-bright: rgba(59,130,246,0.38);
-  --c-accent:        #3B82F6;
-  --c-accent-rgb:    59,130,246;
-  --c-accent-bg:     rgba(59,130,246,0.1);
-  --c-nav:           rgba(8,12,20,0.95);
-  --c-input:         #0D1525;
+  --c-bg:            #141210;
+  --c-surface:       #1C1916;
+  --c-card:          #231F1B;
+  --c-text:          #F5F0EB;
+  --c-sub:           #8A7D70;
+  --c-border:        rgba(252,76,2,0.12);
+  --c-border-bright: rgba(252,76,2,0.36);
+  --c-accent:        #FC4C02;
+  --c-accent-rgb:    252,76,2;
+  --c-accent-bg:     rgba(252,76,2,0.10);
+  --c-nav:           rgba(20,18,16,0.95);
+  --c-input:         #1C1916;
   --c-pill-inactive: rgba(255,255,255,0.06);
-  --c-card-shadow:   0 4px 28px rgba(0,0,0,0.55), 0 0 0 1px rgba(59,130,246,0.07);
+  --c-card-shadow:   0 4px 28px rgba(0,0,0,0.55), 0 0 0 1px rgba(252,76,2,0.07);
   /* Semantic */
   --c-warn:          #FBBF24;
   --c-warn-bg:       rgba(251,191,36,0.08);
@@ -30,30 +30,30 @@
   --c-cool:          #34D399;
   --c-cool-bg:       rgba(52,211,153,0.08);
   --c-cool-border:   rgba(52,211,153,0.22);
-  /* REX hull tokens */
-  --rex-hull:        rgba(13,21,42,0.92);
-  --rex-hull2:       rgba(9,15,30,0.96);
-  --rex-hulld:       rgba(4,7,16,0.98);
-  --rex-stroke:      rgba(59,130,246,0.40);
-  --rex-hi:          rgba(147,197,253,0.20);
+  /* Coach hull tokens */
+  --rex-hull:        rgba(20,14,10,0.92);
+  --rex-hull2:       rgba(14,10,7,0.96);
+  --rex-hulld:       rgba(8,5,3,0.98);
+  --rex-stroke:      rgba(252,76,2,0.40);
+  --rex-hi:          rgba(253,186,116,0.20);
 }
 
 /* ── LIGHT (explicit) ────────────────────────────────────────── */
 [data-theme="light"] {
-  --c-bg:            #EFF4FF;
+  --c-bg:            #FFF8F5;
   --c-surface:       #FFFFFF;
   --c-card:          #FFFFFF;
-  --c-text:          #0A0F1E;
-  --c-sub:           #556080;
-  --c-border:        rgba(37,99,235,0.09);
-  --c-border-bright: rgba(37,99,235,0.30);
-  --c-accent:        #2563EB;
-  --c-accent-rgb:    37,99,235;
-  --c-accent-bg:     rgba(37,99,235,0.08);
+  --c-text:          #1A100A;
+  --c-sub:           #7A5C4E;
+  --c-border:        rgba(232,66,10,0.09);
+  --c-border-bright: rgba(232,66,10,0.28);
+  --c-accent:        #E8420A;
+  --c-accent-rgb:    232,66,10;
+  --c-accent-bg:     rgba(232,66,10,0.08);
   --c-nav:           rgba(255,255,255,0.97);
-  --c-input:         #E8EFFF;
+  --c-input:         #FFF0EB;
   --c-pill-inactive: rgba(0,0,0,0.05);
-  --c-card-shadow:   0 1px 3px rgba(0,0,0,0.05), 0 6px 20px rgba(37,99,235,0.08);
+  --c-card-shadow:   0 1px 3px rgba(0,0,0,0.05), 0 6px 20px rgba(232,66,10,0.08);
   /* Semantic */
   --c-warn:          #D97706;
   --c-warn-bg:       rgba(217,119,6,0.07);
@@ -61,42 +61,42 @@
   --c-cool:          #059669;
   --c-cool-bg:       rgba(5,150,105,0.07);
   --c-cool-border:   rgba(5,150,105,0.24);
-  /* REX hull tokens — visible on light bg */
-  --rex-hull:        rgba(15,30,70,0.88);
-  --rex-hull2:       rgba(10,20,55,0.92);
-  --rex-hulld:       rgba(5,10,28,0.96);
-  --rex-stroke:      rgba(37,99,235,0.55);
-  --rex-hi:          rgba(147,197,253,0.30);
+  /* Coach hull tokens — visible on light bg */
+  --rex-hull:        rgba(40,20,10,0.88);
+  --rex-hull2:       rgba(28,14,7,0.92);
+  --rex-hulld:       rgba(14,7,3,0.96);
+  --rex-stroke:      rgba(232,66,10,0.55);
+  --rex-hi:          rgba(253,186,116,0.30);
 }
 
 /* ── AUTO — follows system when data-theme is absent ─────────── */
 @media (prefers-color-scheme: light) {
   :root:not([data-theme="dark"]):not([data-theme="light"]) {
-    --c-bg:            #EFF4FF;
+    --c-bg:            #FFF8F5;
     --c-surface:       #FFFFFF;
     --c-card:          #FFFFFF;
-    --c-text:          #0A0F1E;
-    --c-sub:           #556080;
-    --c-border:        rgba(37,99,235,0.09);
-    --c-border-bright: rgba(37,99,235,0.30);
-    --c-accent:        #2563EB;
-    --c-accent-rgb:    37,99,235;
-    --c-accent-bg:     rgba(37,99,235,0.08);
+    --c-text:          #1A100A;
+    --c-sub:           #7A5C4E;
+    --c-border:        rgba(232,66,10,0.09);
+    --c-border-bright: rgba(232,66,10,0.28);
+    --c-accent:        #E8420A;
+    --c-accent-rgb:    232,66,10;
+    --c-accent-bg:     rgba(232,66,10,0.08);
     --c-nav:           rgba(255,255,255,0.97);
-    --c-input:         #E8EFFF;
+    --c-input:         #FFF0EB;
     --c-pill-inactive: rgba(0,0,0,0.05);
-    --c-card-shadow:   0 1px 3px rgba(0,0,0,0.05), 0 6px 20px rgba(37,99,235,0.08);
+    --c-card-shadow:   0 1px 3px rgba(0,0,0,0.05), 0 6px 20px rgba(232,66,10,0.08);
     --c-warn:          #D97706;
     --c-warn-bg:       rgba(217,119,6,0.07);
     --c-warn-border:   rgba(217,119,6,0.24);
     --c-cool:          #059669;
     --c-cool-bg:       rgba(5,150,105,0.07);
     --c-cool-border:   rgba(5,150,105,0.24);
-    --rex-hull:        rgba(15,30,70,0.88);
-    --rex-hull2:       rgba(10,20,55,0.92);
-    --rex-hulld:       rgba(5,10,28,0.96);
-    --rex-stroke:      rgba(37,99,235,0.55);
-    --rex-hi:          rgba(147,197,253,0.30);
+    --rex-hull:        rgba(40,20,10,0.88);
+    --rex-hull2:       rgba(28,14,7,0.92);
+    --rex-hulld:       rgba(14,7,3,0.96);
+    --rex-stroke:      rgba(232,66,10,0.55);
+    --rex-hi:          rgba(253,186,116,0.30);
   }
 }
 

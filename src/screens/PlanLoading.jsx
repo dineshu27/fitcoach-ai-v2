@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import REX from "../components/REX";
+import { dur, ease } from "../motion/tokens";
 
 const STEPS = [
   { text: "Calculating your metrics...", icon: "📊" },
@@ -57,7 +58,7 @@ export default function PlanLoading() {
       }} />
 
       {/* REX */}
-      <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.5 }}>
+      <motion.div initial={{ y: 16, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: dur.medium, ease: ease.out }}>
         <REX state="thinking" size="lg" />
       </motion.div>
 
@@ -77,7 +78,7 @@ export default function PlanLoading() {
           className="h-full rounded-full"
           style={{ background: "linear-gradient(90deg, var(--c-accent), #4ECDC4)" }}
           animate={{ width: `${progress}%` }}
-          transition={{ duration: 1, ease: "easeOut" }}
+          transition={{ duration: dur.progress, ease: ease.out }}
         />
       </div>
 
@@ -89,9 +90,9 @@ export default function PlanLoading() {
           return (
             <motion.div
               key={i}
-              initial={{ opacity: 0, x: -16 }}
+              initial={{ opacity: 0, x: -12 }}
               animate={{ opacity: isCurrent || isDone ? 1 : 0.25, x: 0 }}
-              transition={{ delay: i * 0.1 }}
+              transition={{ duration: dur.standard, ease: ease.out, delay: i * 0.08 }}
               className="flex items-center gap-3"
             >
               <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full"
@@ -123,8 +124,8 @@ export default function PlanLoading() {
             key={tipIndex}
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.4 }}
+            exit={{ opacity: 0, y: -6 }}
+            transition={{ duration: dur.medium, ease: ease.out }}
             className="text-center text-xs italic"
             style={{ color: "var(--c-accent)" }}
           >

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
 import { Edit3, RefreshCw, AlertCircle, Trash2, TrendingDown, TrendingUp, Minus, Sun, Moon, Sunset, ChevronLeft, ChevronRight, X } from "lucide-react";
 import REX from "../components/REX";
 import { cache } from "../lib/cache";
@@ -7,6 +8,8 @@ import { generateWeeklyPlan } from "../lib/api";
 import { calcBMI, calcBMR, calcTDEE, calcTargetCalories, calcMacros, bmiCategory, calcWaterIntake, calcHeartRateZones, dayStreak } from "../lib/calculations";
 import PlanLoading from "./PlanLoading";
 import { useTheme } from "../lib/theme";
+import { staggerContainer, staggerItemFast } from "../motion/variants";
+import { pressable, pressableIcon } from "../motion/presets";
 
 const COND_COLORS = {
   "High LDL / High Cholesterol":    { bg: "rgba(255,107,107,0.15)", border: "rgba(255,107,107,0.3)",  color: "#FF6B6B" },
@@ -23,10 +26,11 @@ const THEME_LABELS = { auto: "Auto", light: "Light", dark: "Dark" };
 
 function ActionBtn({ onClick, Icon, label, style }) {
   return (
-    <button onClick={onClick} className="flex w-full items-center gap-3 rounded-2xl p-4 text-left font-semibold transition-all active:scale-95" style={style}>
+    <motion.button onClick={onClick} {...pressable}
+      className="flex w-full items-center gap-3 rounded-2xl p-4 text-left font-semibold" style={style}>
       <Icon size={18} />
       {label}
-    </button>
+    </motion.button>
   );
 }
 
@@ -346,18 +350,18 @@ export default function Profile() {
       <div className="px-4 space-y-4 mt-4">
 
         {/* Stats */}
-        <div className="grid grid-cols-3 gap-3">
+        <motion.div className="grid grid-cols-3 gap-3" variants={staggerContainer} initial="hidden" animate="show">
           {[
             { label: "Day streak", val: streak, color: "var(--c-warn)" },
             { label: "BMI",        val: plan?.bmi, color: bmiCat.color || "var(--c-accent)" },
             { label: "Workouts",   val: stats.workoutsLogged, color: "#4ECDC4" },
           ].map(({ label, val, color }) => (
-            <div key={label} className="rounded-2xl p-3 text-center glass">
+            <motion.div key={label} variants={staggerItemFast} className="rounded-2xl p-3 text-center glass">
               <p className="text-2xl font-extrabold" style={{ color }}>{val ?? "—"}</p>
               <p className="text-[11px] mt-0.5" style={{ color: "var(--c-sub)" }}>{label}</p>
-            </div>
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
 
         {/* BMI visual */}
         <div className="rounded-2xl p-4 glass">
@@ -389,15 +393,17 @@ export default function Profile() {
             {/* Week / Month toggle */}
             <div className="flex rounded-lg p-0.5" style={{ background: "var(--c-pill-inactive)" }}>
               {["week", "month"].map((t) => (
-                <button key={t} onClick={() => setProgressTab(t)}
-                  className="rounded-md px-3 py-1 text-xs font-bold transition-all capitalize"
+                <motion.button key={t} onClick={() => setProgressTab(t)}
+                  {...pressable}
+                  className="rounded-md px-3 py-1 text-xs font-bold capitalize"
                   style={{
                     background: progressTab === t ? "var(--c-card)" : "transparent",
                     color: progressTab === t ? "var(--c-accent)" : "var(--c-sub)",
                     boxShadow: progressTab === t ? "0 1px 4px rgba(0,0,0,0.1)" : "none",
+                    transition: "background 0.18s, color 0.18s",
                   }}>
                   This {t}
-                </button>
+                </motion.button>
               ))}
             </div>
           </div>

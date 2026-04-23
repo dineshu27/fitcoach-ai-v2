@@ -11,6 +11,8 @@ import REX from "../components/REX";
 import { cache } from "../lib/cache";
 import { bmiCategory, dayStreak } from "../lib/calculations";
 import { useTheme } from "../lib/theme";
+import { staggerContainer, staggerItem, fadeUp } from "../motion/variants";
+import { pressable, pressablePrimary, cardInteractive } from "../motion/presets";
 
 const DAYS = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
 
@@ -309,25 +311,35 @@ export default function Dashboard() {
         {plan.macros && (
           <div>
             <SectionHeader title="Daily targets" />
-            <div className="grid grid-cols-4 gap-2">
+            <motion.div
+              className="grid grid-cols-4 gap-2"
+              variants={staggerContainer}
+              initial="hidden"
+              animate="show"
+            >
               {[
                 { label: "Protein", val: plan.macros.protein, color: "var(--c-accent)" },
                 { label: "Carbs",   val: plan.macros.carbs,   color: "var(--c-warn)" },
                 { label: "Fat",     val: plan.macros.fat,      color: "#F87171" },
                 { label: "Fibre",   val: plan.macros.fibre,    color: "var(--c-cool)" },
               ].map(({ label, val, color }) => (
-                <div key={label} className="rounded-2xl p-3 text-center"
+                <motion.div key={label} variants={staggerItem} className="rounded-2xl p-3 text-center"
                   style={{ background: "var(--c-card)", border: "1px solid var(--c-border)", boxShadow: "var(--c-card-shadow)" }}>
                   <p className="text-base font-extrabold" style={{ color }}>{val}g</p>
                   <p className="text-[9px] mt-0.5 font-semibold" style={{ color: "var(--c-sub)" }}>{label}</p>
-                </div>
+                </motion.div>
               ))}
-            </div>
+            </motion.div>
           </div>
         )}
 
         {/* ── Today's progress strip ─────────────────────────────── */}
-        <div className="grid grid-cols-3 gap-3 mt-5">
+        <motion.div
+          className="grid grid-cols-3 gap-3 mt-5"
+          variants={staggerContainer}
+          initial="hidden"
+          animate="show"
+        >
           {[
             {
               icon: "🔥", label: "Calories",
@@ -350,23 +362,28 @@ export default function Dashboard() {
               pct: null,
             },
           ].map(({ icon, label, value, sub, color, bg, border, pct }) => (
-            <div key={label} className="rounded-2xl p-3 flex flex-col"
-              style={{ background: bg, border: `1px solid ${border}`, boxShadow: "var(--c-card-shadow)" }}>
+            <motion.div
+              key={label}
+              variants={staggerItem}
+              className="rounded-2xl p-3 flex flex-col"
+              style={{ background: bg, border: `1px solid ${border}`, boxShadow: "var(--c-card-shadow)" }}
+            >
               <p className="text-base leading-none mb-1">{icon}</p>
               <p className="text-[17px] font-extrabold leading-tight tabular-nums" style={{ color }}>{value}</p>
               <p className="text-[9px] font-bold mt-0.5 uppercase tracking-wide" style={{ color }}>{label}</p>
               <p className="text-[9px] mt-0.5 leading-tight" style={{ color: "var(--c-sub)" }}>{sub}</p>
               {pct !== null && (
                 <div className="mt-2.5">
-                  {/* Segmented progress bar */}
+                  {/* Segmented progress — segments reveal with stagger, feel earned */}
                   <div className="flex gap-0.5 mb-1">
                     {Array.from({ length: 10 }).map((_, i) => (
-                      <motion.div key={i}
+                      <motion.div
+                        key={i}
                         className="flex-1 rounded-full"
                         style={{ height: 4, background: i / 10 < pct ? color : "rgba(255,255,255,0.12)" }}
-                        initial={{ scaleY: 0 }}
-                        animate={{ scaleY: 1 }}
-                        transition={{ duration: 0.3, delay: i * 0.04 }}
+                        initial={{ scaleY: 0, opacity: 0 }}
+                        animate={{ scaleY: 1, opacity: 1 }}
+                        transition={{ duration: 0.22, delay: 0.12 + i * 0.035, ease: [0.0, 0.0, 0.2, 1.0] }}
                       />
                     ))}
                   </div>
@@ -375,19 +392,22 @@ export default function Dashboard() {
                   </p>
                 </div>
               )}
-            </div>
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
 
         {/* ── Quick actions ──────────────────────────────────────── */}
         <div className="flex gap-3 mt-4">
-          <button onClick={() => navigate("/log")}
-            className="flex-1 flex items-center gap-3 rounded-2xl p-4 text-left transition-all active:scale-95"
+          <motion.button
+            onClick={() => navigate("/log")}
+            {...pressable}
+            className="flex-1 flex items-center gap-3 rounded-2xl p-4 text-left"
             style={{
               background: "linear-gradient(135deg, rgba(var(--c-accent-rgb),0.14), rgba(var(--c-accent-rgb),0.06))",
               border: "1px solid var(--c-border-bright)",
               boxShadow: "var(--c-card-shadow)",
-            }}>
+            }}
+          >
             <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl"
               style={{ background: "var(--c-accent)" }}>
               <ClipboardList size={18} color="#fff" />
@@ -396,14 +416,17 @@ export default function Dashboard() {
               <p className="font-bold text-sm" style={{ color: "var(--c-text)" }}>Log Today</p>
               <p className="text-[11px]" style={{ color: "var(--c-sub)" }}>Food & water</p>
             </div>
-          </button>
-          <button onClick={() => navigate("/exercise")}
-            className="flex-1 flex items-center gap-3 rounded-2xl p-4 text-left transition-all active:scale-95"
+          </motion.button>
+          <motion.button
+            onClick={() => navigate("/exercise")}
+            {...pressable}
+            className="flex-1 flex items-center gap-3 rounded-2xl p-4 text-left"
             style={{
               background: "linear-gradient(135deg, rgba(52,211,153,0.12), rgba(52,211,153,0.04))",
               border: "1px solid var(--c-cool-border)",
               boxShadow: "var(--c-card-shadow)",
-            }}>
+            }}
+          >
             <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl"
               style={{ background: "var(--c-cool)" }}>
               <Dumbbell size={18} color="#fff" />
@@ -412,7 +435,7 @@ export default function Dashboard() {
               <p className="font-bold text-sm" style={{ color: "var(--c-text)" }}>Train</p>
               <p className="text-[11px]" style={{ color: "var(--c-sub)" }}>Today's plan</p>
             </div>
-          </button>
+          </motion.button>
         </div>
 
 

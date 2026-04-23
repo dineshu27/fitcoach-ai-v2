@@ -1,6 +1,8 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { Home, ClipboardList, Dumbbell, User, UtensilsCrossed } from "lucide-react";
 import { motion } from "framer-motion";
+import { spring } from "../motion/tokens";
+import { pressable } from "../motion/presets";
 
 const TABS = [
   { path: "/dashboard", label: "Home",    Icon: Home },
@@ -17,7 +19,6 @@ export default function BottomNav() {
   const navigate = useNavigate();
 
   const activeIdx = TABS.findIndex(t => t.path === location.pathname);
-  // Center of each tab in % of total width
   const indicatorLeft = activeIdx >= 0
     ? `calc(${activeIdx} * (100% / ${N}) + (100% / ${N} / 2))`
     : "-100px";
@@ -34,7 +35,7 @@ export default function BottomNav() {
         position: "fixed",
       }}
     >
-      {/* Single sliding indicator at top — avoids layoutId positioning bugs */}
+      {/* Sliding active indicator — spring matches nav token */}
       {activeIdx >= 0 && (
         <motion.div
           style={{
@@ -48,7 +49,7 @@ export default function BottomNav() {
             x: "-50%",
           }}
           animate={{ left: indicatorLeft }}
-          transition={{ type: "spring", stiffness: 380, damping: 32 }}
+          transition={spring.nav}
         />
       )}
 
@@ -56,18 +57,16 @@ export default function BottomNav() {
         {TABS.map(({ path, label, Icon }, idx) => {
           const active = idx === activeIdx;
           return (
-            <button
+            <motion.button
               key={path}
               onClick={() => navigate(path)}
-              className="flex flex-1 flex-col items-center justify-center gap-0.5 py-2 transition-all"
+              {...pressable}
+              className="flex flex-1 flex-col items-center justify-center gap-0.5 py-2"
               style={{ minHeight: 54 }}
             >
               <div
-                className="flex h-7 w-7 items-center justify-center rounded-xl transition-all"
-                style={{
-                  background: active ? "var(--c-accent-bg)" : "transparent",
-                  transform: active ? "scale(1.05)" : "scale(1)",
-                }}
+                className="flex h-7 w-7 items-center justify-center rounded-xl transition-colors"
+                style={{ background: active ? "var(--c-accent-bg)" : "transparent" }}
               >
                 <Icon
                   size={18}
@@ -81,7 +80,7 @@ export default function BottomNav() {
               >
                 {label}
               </span>
-            </button>
+            </motion.button>
           );
         })}
       </div>

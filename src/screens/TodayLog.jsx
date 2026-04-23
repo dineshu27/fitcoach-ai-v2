@@ -1,6 +1,9 @@
 import { useState, useRef } from "react";
 import { useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import { staggerContainer, staggerItemFast } from "../motion/variants";
+import { pressable } from "../motion/presets";
+import { dur } from "../motion/tokens";
 import {
   Search, Plus, Minus, Flame, Droplets, X, ChevronDown,
   CheckCircle2, Utensils, Dumbbell, RefreshCw, Zap, Sparkles, Edit2, Check,
@@ -793,7 +796,7 @@ export default function TodayLog({ preloadExercise }) {
           <div className="progress-track mb-2">
             <motion.div className="progress-fill"
               style={{ background: over ? "#FF6B6B" : "var(--c-accent)", width: `${pct * 100}%` }}
-              initial={{ width: 0 }} animate={{ width: `${pct * 100}%` }} transition={{ duration: 0.5 }} />
+              initial={{ width: 0 }} animate={{ width: `${pct * 100}%` }} transition={{ duration: dur.progress, ease: "easeOut" }} />
           </div>
           <p className="text-xs" style={{ color: "var(--c-sub)" }}>
             {over ? `${log.calories - calorieTarget} kcal over target` : `${calorieTarget - log.calories} kcal remaining`}
@@ -801,8 +804,10 @@ export default function TodayLog({ preloadExercise }) {
 
           {(log.foods || []).length > 0 && (
             <div className="mt-3 space-y-1.5">
+              <motion.div variants={staggerContainer} initial="hidden" animate="show" className="space-y-1.5">
               {log.foods.map((f, i) => (
-                <div key={i} className="flex items-center justify-between rounded-xl px-3 py-2"
+                <motion.div key={i} variants={staggerItemFast}
+                  className="flex items-center justify-between rounded-xl px-3 py-2"
                   style={{ background: "var(--c-input)", border: "1px solid var(--c-border)" }}>
                   <div className="flex-1 min-w-0">
                     <p className="text-xs truncate" style={{ color: "var(--c-text)" }}>{f.name}</p>
@@ -811,8 +816,9 @@ export default function TodayLog({ preloadExercise }) {
                     ) : null}
                   </div>
                   <span className="text-xs font-bold ml-3 flex-shrink-0" style={{ color: "var(--c-accent)" }}>{f.calories} kcal</span>
-                </div>
+                </motion.div>
               ))}
+              </motion.div>
               <button onClick={handleUndo} className="flex items-center gap-1.5 text-xs font-semibold mt-1"
                 style={{ color: "#FF6B6B" }}>
                 <X size={11} /> Remove last entry
@@ -844,7 +850,7 @@ export default function TodayLog({ preloadExercise }) {
                     </div>
                     <div className="progress-track">
                       <motion.div className="progress-fill" style={{ background: mOv ? "#FF6B6B" : color, width: `${mp * 100}%` }}
-                        initial={{ width: 0 }} animate={{ width: `${mp * 100}%` }} transition={{ duration: 0.5, delay: 0.1 }} />
+                        initial={{ width: 0 }} animate={{ width: `${mp * 100}%` }} transition={{ duration: dur.progress, delay: 0.08, ease: "easeOut" }} />
                     </div>
                   </div>
                 );
@@ -859,14 +865,16 @@ export default function TodayLog({ preloadExercise }) {
             { key: "auto",   label: "Auto Log",   icon: Sparkles },
             { key: "manual", label: "Manual Log",  icon: Plus },
           ].map(({ key, label, icon: Icon }) => (
-            <button key={key} onClick={() => setMode(key)}
-              className="flex-1 flex items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-bold transition-all"
+            <motion.button key={key} onClick={() => setMode(key)}
+              {...pressable}
+              className="flex-1 flex items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-bold"
               style={{
                 background: mode === key ? "var(--c-accent)" : "transparent",
                 color: mode === key ? "#fff" : "var(--c-sub)",
+                transition: "background 0.18s, color 0.18s",
               }}>
               <Icon size={14} /> {label}
-            </button>
+            </motion.button>
           ))}
         </div>
 

@@ -3,6 +3,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown, ChevronUp, Info, PlayCircle, ClipboardList, CheckCircle2, Plus } from "lucide-react";
 import VideoModal from "./VideoModal";
 import { cache } from "../lib/cache";
+import { expandCollapse, checkPop } from "../motion/variants";
+import { pressable, pressablePrimary, cardInteractive } from "../motion/presets";
 
 const MUSCLE_COLORS = {
   chest: "var(--c-accent-bg)", back: "var(--c-cool-bg)", shoulders: "var(--c-accent-bg)",
@@ -115,10 +117,22 @@ function SetTracker({ exercise }) {
               className="rounded-lg px-2 py-1 text-xs text-center outline-none w-full"
               style={{ background: "var(--c-input, var(--c-card))", border: "1px solid var(--c-border)", color: "var(--c-text)" }}
             />
-            <button onClick={() => toggleDone(i)} className="flex items-center justify-center rounded-lg p-1.5 transition-all"
-              style={{ background: s.done ? "rgba(78,205,196,0.2)" : "var(--c-accent-bg)", border: `1px solid ${s.done ? "rgba(78,205,196,0.4)" : "var(--c-border)"}` }}>
-              <CheckCircle2 size={14} style={{ color: s.done ? "#4ECDC4" : "var(--c-sub)" }} />
-            </button>
+            <motion.button
+              onClick={() => toggleDone(i)}
+              {...pressable}
+              className="flex items-center justify-center rounded-lg p-1.5"
+              style={{ background: s.done ? "rgba(78,205,196,0.2)" : "var(--c-accent-bg)", border: `1px solid ${s.done ? "rgba(78,205,196,0.4)" : "var(--c-border)"}` }}
+            >
+              <motion.span
+                key={String(s.done)}
+                variants={checkPop}
+                initial="hidden"
+                animate="show"
+                style={{ display: "flex" }}
+              >
+                <CheckCircle2 size={14} style={{ color: s.done ? "#4ECDC4" : "var(--c-sub)" }} />
+              </motion.span>
+            </motion.button>
           </div>
         ))}
       </div>
@@ -142,14 +156,19 @@ export default function ExerciseCard({ exercise, index }) {
   return (
     <>
     <div
-      className="overflow-hidden rounded-xl transition-all"
+      className="overflow-hidden rounded-xl"
       style={{
         background: "var(--c-card)",
         border: open ? "1px solid var(--c-border-bright)" : "1px solid var(--c-border)",
         boxShadow: open ? "var(--c-card-shadow)" : "none",
+        transition: "border-color 0.18s, box-shadow 0.18s",
       }}
     >
-      <button className="flex w-full items-center gap-3 p-3 text-left" onClick={() => setOpen((o) => !o)}>
+      <motion.button
+        className="flex w-full items-center gap-3 p-3 text-left"
+        onClick={() => setOpen((o) => !o)}
+        {...cardInteractive}
+      >
         <span
           className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full text-xs font-bold text-white"
           style={{ background: "var(--c-accent)", boxShadow: "0 0 10px rgba(var(--c-accent-rgb, 108,99,255),0.5)" }}
@@ -186,18 +205,22 @@ export default function ExerciseCard({ exercise, index }) {
             )}
           </div>
         </div>
-        <div style={{ color: "var(--c-sub)" }}>
-          {open ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-        </div>
-      </button>
+        <motion.div
+          animate={{ rotate: open ? 180 : 0 }}
+          transition={{ duration: 0.18 }}
+          style={{ color: "var(--c-sub)" }}
+        >
+          <ChevronDown size={16} />
+        </motion.div>
+      </motion.button>
 
-      <AnimatePresence>
+      <AnimatePresence initial={false}>
         {open && (
           <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.2 }}
+            variants={expandCollapse}
+            initial="hidden"
+            animate="show"
+            exit="exit"
             style={{ overflow: "hidden" }}
           >
             <div className="px-3 pb-3 pt-1 space-y-3" style={{ borderTop: "1px solid var(--c-border)" }}>
@@ -226,21 +249,23 @@ export default function ExerciseCard({ exercise, index }) {
               )}
 
               {/* Set tracker toggle */}
-              <button
+              <motion.button
                 onClick={() => setShowTracker((t) => !t)}
-                className="flex w-full items-center justify-center gap-2 rounded-xl py-2 text-xs font-semibold transition-all"
+                {...pressable}
+                className="flex w-full items-center justify-center gap-2 rounded-xl py-2 text-xs font-semibold"
                 style={{ background: "var(--c-accent-bg)", border: "1px solid var(--c-border)", color: "var(--c-accent)" }}
               >
                 <ClipboardList size={13} />
                 {showTracker ? "Hide Tracker" : "Track This Exercise"}
-              </button>
+              </motion.button>
 
               {showTracker && <SetTracker exercise={exercise} />}
 
               {/* Video button */}
-              <button
+              <motion.button
                 onClick={(e) => { e.stopPropagation(); setShowVideo(true); }}
-                className="flex w-full items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-bold transition-all active:scale-95"
+                {...pressablePrimary}
+                className="flex w-full items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-bold"
                 style={{
                   background: "var(--c-accent-bg)",
                   color: "var(--c-accent)",
@@ -249,7 +274,7 @@ export default function ExerciseCard({ exercise, index }) {
               >
                 <PlayCircle size={16} />
                 Search Tutorial
-              </button>
+              </motion.button>
             </div>
           </motion.div>
         )}

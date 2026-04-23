@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { ChevronRight, Zap, UtensilsCrossed } from "lucide-react";
 import MacroRing from "../components/MacroRing";
 import MealCard from "../components/MealCard";
 import { cache } from "../lib/cache";
+import { staggerContainer, staggerItemFast, expandCollapse } from "../motion/variants";
+import { tabPress, pressablePrimary } from "../motion/presets";
 
 const SHORT = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
 const FULL  = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
@@ -156,32 +158,36 @@ export default function DietPlan() {
                     </button>
 
                     {/* Expanded: quick suggestions */}
-                    {expandMeal === type && (
-                      <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: "auto" }}
-                        exit={{ opacity: 0, height: 0 }}
-                        className="overflow-hidden">
-                        <div className="px-4 pb-3">
-                          <p className="text-[10px] font-bold uppercase tracking-wide mb-2" style={{ color: "var(--c-sub)" }}>
-                            Quick add suggestions →
-                          </p>
-                          <SuggestionRow mealType={type} onTap={handleSuggestionTap} />
-                        </div>
-                      </motion.div>
-                    )}
+                    <AnimatePresence initial={false}>
+                      {expandMeal === type && (
+                        <motion.div
+                          variants={expandCollapse}
+                          initial="hidden"
+                          animate="show"
+                          exit="exit"
+                          style={{ overflow: "hidden" }}>
+                          <div className="px-4 pb-3">
+                            <p className="text-[10px] font-bold uppercase tracking-wide mb-2" style={{ color: "var(--c-sub)" }}>
+                              Quick add suggestions →
+                            </p>
+                            <SuggestionRow mealType={type} onTap={handleSuggestionTap} />
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
                 );
               })}
             </div>
 
             {/* Log food CTA */}
-            <button
+            <motion.button
               onClick={() => navigate("/log")}
-              className="flex w-full items-center justify-center gap-2 mt-3 rounded-2xl py-3 text-sm font-bold transition-all active:scale-95"
+              {...pressablePrimary}
+              className="flex w-full items-center justify-center gap-2 mt-3 rounded-2xl py-3 text-sm font-bold"
               style={{ background: "var(--c-accent)", color: "#fff", boxShadow: `0 4px 16px rgba(var(--c-accent-rgb),0.35)` }}>
               + Log Today's Food
-            </button>
+            </motion.button>
           </div>
         )}
 
@@ -220,16 +226,18 @@ export default function DietPlan() {
             const isRest = plan.weekPlan?.[i]?.workout?.type === "Rest";
             const isSelected = day === i;
             return (
-              <button key={d} onClick={() => setDay(i)}
-                className="flex-shrink-0 rounded-xl px-3.5 py-2 text-sm font-semibold transition-all"
+              <motion.button key={d} onClick={() => setDay(i)}
+                {...tabPress}
+                className="flex-shrink-0 rounded-xl px-3.5 py-2 text-sm font-semibold"
                 style={{
                   background: isSelected ? "var(--c-accent)" : "var(--c-card)",
                   border: isSelected ? "1px solid var(--c-accent)" : "1px solid var(--c-border)",
                   color: isSelected ? "#fff" : "var(--c-sub)",
                   boxShadow: isSelected ? `0 0 12px rgba(var(--c-accent-rgb),0.4)` : "var(--c-card-shadow)",
+                  transition: "background 0.18s, color 0.18s, box-shadow 0.18s",
                 }}>
                 {d}{isRest ? " 💤" : ""}
-              </button>
+              </motion.button>
             );
           })}
         </div>
@@ -245,20 +253,25 @@ export default function DietPlan() {
           </div>
 
           {dayPlan?.meals ? (
-            Object.entries(dayPlan.meals).map(([type, meal], i) => (
-              <motion.div key={`${day}-${type}`}
-                initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.07 }}>
-                <MealCard type={type} meal={meal} />
-                {/* Suggestions below each meal card */}
-                <div className="mt-2">
-                  <p className="text-[10px] font-semibold mb-1.5 pl-1" style={{ color: "var(--c-sub)" }}>
-                    What to eat for {type}:
-                  </p>
-                  <SuggestionRow mealType={type} onTap={handleSuggestionTap} />
-                </div>
-              </motion.div>
-            ))
+            <motion.div
+              key={day}
+              variants={staggerContainer}
+              initial="hidden"
+              animate="show"
+              className="space-y-3"
+            >
+              {Object.entries(dayPlan.meals).map(([type, meal]) => (
+                <motion.div key={`${day}-${type}`} variants={staggerItemFast}>
+                  <MealCard type={type} meal={meal} />
+                  <div className="mt-2">
+                    <p className="text-[10px] font-semibold mb-1.5 pl-1" style={{ color: "var(--c-sub)" }}>
+                      What to eat for {type}:
+                    </p>
+                    <SuggestionRow mealType={type} onTap={handleSuggestionTap} />
+                  </div>
+                </motion.div>
+              ))}
+            </motion.div>
           ) : (
             <div className="rounded-2xl p-6 text-center glass">
               <p style={{ color: "var(--c-sub)" }}>No meal data for this day.</p>

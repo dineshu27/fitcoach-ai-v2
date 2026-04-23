@@ -6,6 +6,8 @@ import REX from "../components/REX";
 import ChatBubble, { TypingIndicator } from "../components/ChatBubble";
 import { cache } from "../lib/cache";
 import { rexChat, sanitizeInput } from "../lib/api";
+import { fadeIn, fadeUp } from "../motion/variants";
+import { pressableIcon, pressablePrimary, pressable } from "../motion/presets";
 
 const QUICK_PROMPT_GROUPS = [
   {
@@ -144,11 +146,12 @@ export default function Coach() {
       <div className="flex-shrink-0 flex items-center gap-2 px-4 pb-3"
         style={{ borderBottom: "1px solid var(--c-border)", background: "var(--c-nav)", backdropFilter: "blur(20px)", paddingTop: "max(env(safe-area-inset-top), 12px)" }}>
         {/* Back button */}
-        <button onClick={() => navigate(-1)}
-          className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl transition-all active:scale-90"
+        <motion.button onClick={() => navigate(-1)}
+          {...pressableIcon}
+          className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl"
           style={{ background: "var(--c-accent-bg)", border: "1px solid var(--c-border)" }}>
           <ArrowLeft size={16} style={{ color: "var(--c-accent)" }} />
-        </button>
+        </motion.button>
         {/* Mini REX orb */}
         <div style={{ flexShrink: 0, width: 40, height: 40, display: "flex", alignItems: "center", justifyContent: "center" }}>
           <REX state={fitaiState} size="xs" />
@@ -181,9 +184,8 @@ export default function Coach() {
       {/* ── Messages ─────────────────────────────────────────────────── */}
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3" style={{ paddingBottom: 16 }}>
         {messages.map((msg) => (
-          <motion.div key={msg.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
-            <ChatBubble message={msg} />
-          </motion.div>
+          // ChatBubble manages its own entry animation — no wrapper needed
+          <ChatBubble key={msg.id} message={msg} />
         ))}
         {loading && <TypingIndicator />}
         <div ref={bottomRef} />
@@ -226,11 +228,15 @@ export default function Coach() {
               style={{ color: "var(--c-text)", fontFamily: "Space Grotesk, sans-serif" }}
             />
           </div>
-          <button onClick={() => send()} disabled={!input.trim() || loading || remaining <= 0}
-            className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full transition-all disabled:opacity-40"
-            style={{ background: "var(--c-accent)", boxShadow: "0 0 15px rgba(var(--c-accent-rgb),0.4)" }}>
+          <motion.button
+            onClick={() => send()}
+            disabled={!input.trim() || loading || remaining <= 0}
+            {...pressablePrimary}
+            className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full disabled:opacity-40"
+            style={{ background: "var(--c-accent)", boxShadow: "0 0 15px rgba(var(--c-accent-rgb),0.4)" }}
+          >
             <Send size={16} color="white" />
-          </button>
+          </motion.button>
         </div>
       </div>
 

@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { ThemeProvider } from "./lib/theme";
+import { routePage } from "./motion/variants";
 
 import Splash from "./screens/Splash";
 import Onboarding from "./screens/Onboarding";
@@ -23,10 +24,10 @@ function AnimatedRoutes() {
       <AnimatePresence mode="wait">
         <motion.div
           key={location.pathname}
-          initial={{ opacity: 0, x: 16 }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: -16 }}
-          transition={{ duration: 0.18, ease: "easeInOut" }}
+          variants={routePage}
+          initial="hidden"
+          animate="show"
+          exit="exit"
           className="min-h-screen"
         >
           <Routes location={location}>

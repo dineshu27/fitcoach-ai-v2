@@ -1,6 +1,8 @@
 import { useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
+import { modalOverlay, modalPanel } from "../motion/variants";
+import { pressableIcon } from "../motion/presets";
 
 export default function VideoModal({ exercise, onClose }) {
   const query = encodeURIComponent((exercise?.name || "") + " exercise tutorial proper form");
@@ -17,45 +19,41 @@ export default function VideoModal({ exercise, onClose }) {
       <motion.div
         className="fixed inset-0 z-50 flex flex-col items-center justify-center px-4"
         style={{ background: "rgba(0,0,0,0.88)", backdropFilter: "blur(10px)" }}
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
+        variants={modalOverlay}
+        initial="hidden"
+        animate="show"
+        exit="exit"
         onClick={onClose}
       >
         <motion.div
           className="w-full max-w-[420px] rounded-2xl overflow-hidden"
           style={{ background: "var(--c-card)", border: "1px solid var(--c-border-bright)", boxShadow: "0 20px 60px rgba(0,0,0,0.5)" }}
-          initial={{ scale: 0.9, y: 30 }}
-          animate={{ scale: 1, y: 0 }}
-          exit={{ scale: 0.9, y: 30 }}
-          transition={{ type: "spring", damping: 22 }}
+          variants={modalPanel}
           onClick={(e) => e.stopPropagation()}
         >
-          {/* Header */}
           <div className="flex items-center justify-between px-4 py-3"
             style={{ borderBottom: "1px solid var(--c-border)" }}>
             <div>
               <p className="font-bold text-sm" style={{ color: "var(--c-text)" }}>{exercise?.name}</p>
               <p className="text-[11px]" style={{ color: "var(--c-sub)" }}>Exercise tutorial</p>
             </div>
-            <button onClick={onClose} className="rounded-xl p-1.5"
-              style={{ background: "var(--c-pill-inactive)" }}>
+            <motion.button
+              onClick={onClose}
+              {...pressableIcon}
+              className="rounded-xl p-1.5"
+              style={{ background: "var(--c-pill-inactive)" }}
+            >
               <X size={16} style={{ color: "var(--c-sub)" }} />
-            </button>
+            </motion.button>
           </div>
 
-          {/* Embedded YouTube search player */}
           <div style={{ position: "relative", paddingBottom: "56.25%", background: "#000" }}>
             <iframe
               src={embedUrl}
               title={`${exercise?.name} tutorial`}
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowFullScreen
-              style={{
-                position: "absolute", top: 0, left: 0,
-                width: "100%", height: "100%",
-                border: "none",
-              }}
+              style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", border: "none" }}
             />
           </div>
         </motion.div>

@@ -6,6 +6,9 @@ import ExerciseCard from "../components/ExerciseCard";
 import StretchCard from "../components/StretchCard";
 import REX from "../components/REX";
 import { cache } from "../lib/cache";
+import { staggerContainer, staggerItemFast, fadeUp } from "../motion/variants";
+import { tabPress, pressable } from "../motion/presets";
+import { dur, ease } from "../motion/tokens";
 
 const SHORT = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
 const FULL = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
@@ -102,23 +105,31 @@ export default function ExercisePlan() {
         {SHORT.map((d, i) => {
           const isR = plan.weekPlan?.[i]?.workout?.type === "Rest";
           return (
-            <button key={d} onClick={() => setDay(i)}
-              className="flex-shrink-0 rounded-xl px-3.5 py-2 text-sm font-semibold transition-all"
+            <motion.button key={d} onClick={() => setDay(i)}
+              {...tabPress}
+              className="flex-shrink-0 rounded-xl px-3.5 py-2 text-sm font-semibold"
               style={{
                 background: day === i ? "var(--c-accent)" : "var(--c-card)",
                 border: day === i ? "1px solid var(--c-accent)" : "1px solid rgba(var(--c-accent-rgb),0.15)",
                 color: day === i ? "#fff" : "var(--c-sub)",
                 boxShadow: day === i ? "0 0 10px rgba(var(--c-accent-rgb),0.35)" : "none",
+                transition: "background 0.18s, color 0.18s, box-shadow 0.18s",
               }}>
               {d}{isR ? " 💤" : ""}
-            </button>
+            </motion.button>
           );
         })}
       </div>
 
       <div className="px-4 mt-4">
         {dayPlan && (
-          <motion.div key={day} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
+          <motion.div
+            key={day}
+            variants={staggerContainer}
+            initial="hidden"
+            animate="show"
+            className="space-y-4"
+          >
             {/* Day header */}
             <div className="rounded-2xl p-4 glass">
               <div className="flex items-start justify-between">
@@ -183,9 +194,18 @@ export default function ExercisePlan() {
                 {w?.exercises?.length > 0 && (
                   <div>
                     <h3 className="font-bold mb-2" style={{ color: "var(--c-text)" }}>Exercises</h3>
-                    <div className="space-y-2">
-                      {w.exercises.map((ex, i) => <ExerciseCard key={i} exercise={ex} index={i} />)}
-                    </div>
+                    <motion.div
+                      className="space-y-2"
+                      variants={staggerContainer}
+                      initial="hidden"
+                      animate="show"
+                    >
+                      {w.exercises.map((ex, i) => (
+                        <motion.div key={i} variants={staggerItemFast}>
+                          <ExerciseCard exercise={ex} index={i} />
+                        </motion.div>
+                      ))}
+                    </motion.div>
                   </div>
                 )}
 

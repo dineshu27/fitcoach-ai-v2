@@ -39,12 +39,12 @@ function BMIBar({ bmi }) {
   const capped = Math.min(Math.max(bmi, 10), 40);
   const pct = ((capped - 10) / 30) * 100;
   const segments = [
-    { label: "Under", end: 46.7, color: "#4ECDC4" },
-    { label: "Normal", end: 66.7, color: "#4CAF50" },
-    { label: "Over",   end: 83.3, color: "var(--c-warn)" },
-    { label: "Obese",  end: 100,  color: "#FF6B6B" },
+    { label: "Under", end: 46.7, color: "#38BDF8" },
+    { label: "Normal", end: 66.7, color: "#22C55E" },
+    { label: "Over",   end: 83.3, color: "#F97316" },
+    { label: "Obese",  end: 100,  color: "#EF4444" },
   ];
-  const bmiColor = bmi < 18.5 ? "#4ECDC4" : bmi < 25 ? "#4CAF50" : bmi < 30 ? "var(--c-warn)" : "#FF6B6B";
+  const bmiColor = bmi < 18.5 ? "#38BDF8" : bmi < 25 ? "#22C55E" : bmi < 30 ? "#F97316" : "#EF4444";
   return (
     <div>
       <div className="relative h-3 rounded-full overflow-hidden flex" style={{ background: "var(--c-border)" }}>
@@ -368,7 +368,7 @@ export default function Profile() {
           <div className="flex justify-between items-center mb-3">
             <h3 className="font-bold" style={{ color: "var(--c-text)" }}>Body Stats</h3>
             {plan?.bmi && <span className="text-xs font-semibold px-2 py-0.5 rounded-full"
-              style={{ background: "var(--c-accent-bg)", color: "var(--c-accent)" }}>{bmiCat.label}</span>}
+              style={{ background: `${bmiCat.color}25`, color: bmiCat.color }}>{bmiCat.label}</span>}
           </div>
           <div className="grid grid-cols-2 gap-3 mb-4">
             {[

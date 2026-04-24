@@ -289,7 +289,7 @@ Rules:
 - Vary meals daily — no repeated meal names
 - Culturally appropriate foods based on background, available at UK supermarkets`;
 
-  const text = await claudeCall([{ role: "user", content: prompt }], null, 4000, 55000);
+  const text = await claudeCall([{ role: "user", content: prompt }], null, 4000, 55000, "claude-haiku-4-5-20251001");
   // Strip markdown fences and extract the JSON object
   let cleaned = text.replace(/```json\s*/g, "").replace(/```\s*/g, "").trim();
   const start = cleaned.indexOf("{");

@@ -40,13 +40,12 @@ export default defineConfig({
         ],
       },
       workbox: {
+        skipWaiting: true,
+        clientsClaim: true,
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
+        // Don't intercept Google Fonts — let browser HTTP cache handle them.
+        // Intercepting them requires connect-src CSP allowance in the SW context.
         runtimeCaching: [
-          {
-            urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
-            handler: "CacheFirst",
-            options: { cacheName: "google-fonts", expiration: { maxEntries: 10, maxAgeSeconds: 31536000 }, cacheableResponse: { statuses: [0, 200] } },
-          },
           {
             urlPattern: /^https:\/\/api\.anthropic\.com\/.*/i,
             handler: "NetworkOnly",

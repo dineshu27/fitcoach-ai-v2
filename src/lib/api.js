@@ -1,3 +1,5 @@
+import { jsonrepair } from "jsonrepair";
+
 // Always route through the serverless proxy — API key stays server-side.
 const API_URL = "/api/claude";
 
@@ -320,9 +322,14 @@ Rules:
   try {
     parsed = JSON.parse(cleaned);
   } catch (e) {
-    console.error("[FitCoach] JSON parse failed:", e.message);
-    console.error("[FitCoach] Raw response (first 500 chars):", text.slice(0, 500));
-    parsed = recoverJson(cleaned);
+    console.warn("[FitCoach] JSON.parse failed, trying jsonrepair:", e.message);
+    try {
+      parsed = JSON.parse(jsonrepair(cleaned));
+    } catch (e2) {
+      console.error("[FitCoach] jsonrepair failed:", e2.message);
+      console.error("[FitCoach] Raw response (first 500 chars):", text.slice(0, 500));
+      parsed = recoverJson(cleaned);
+    }
   }
   return validatePlan(parsed);
 }

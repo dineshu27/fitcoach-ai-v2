@@ -52,9 +52,29 @@ async function claudeCall(messages, system = null, maxTokens = 1000, timeoutMs =
   return data.content.map((b) => b.text || "").join("");
 }
 
+// Escape literal newlines/tabs inside JSON string values without touching structure
+function fixStringNewlines(str) {
+  let out = "";
+  let inStr = false;
+  let esc = false;
+  for (let i = 0; i < str.length; i++) {
+    const c = str[i];
+    if (esc) { out += c; esc = false; continue; }
+    if (c === "\\" && inStr) { out += c; esc = true; continue; }
+    if (c === '"') { out += c; inStr = !inStr; continue; }
+    if (inStr) {
+      if (c === "\n") { out += "\\n"; continue; }
+      if (c === "\r") { out += "\\r"; continue; }
+      if (c === "\t") { out += "\\t"; continue; }
+    }
+    out += c;
+  }
+  return out;
+}
+
 // Clean up common JSON issues before parsing
 function cleanJson(str) {
-  return str
+  return fixStringNewlines(str)
     .replace(/,\s*}/g, "}")
     .replace(/,\s*]/g, "]")
     .replace(/:\s*undefined/g, ": null")

@@ -46,10 +46,10 @@ export function calcBMI(weight, height) {
 
 export function bmiCategory(bmi) {
   const b = parseFloat(bmi);
-  if (b < 18.5) return { label: "Underweight", color: "#4ECDC4" };
-  if (b < 25) return { label: "Healthy", color: "#4ECDC4" };
-  if (b < 30) return { label: "Overweight", color: "#FFE66D" };
-  return { label: "Obese", color: "#FF6B6B" };
+  if (b < 18.5) return { label: "Underweight", color: "#38BDF8" };
+  if (b < 25)   return { label: "Healthy",     color: "#22C55E" };
+  if (b < 30)   return { label: "Overweight",  color: "#F97316" };
+  return               { label: "Obese",        color: "#EF4444" };
 }
 
 export function calcWaterIntake(weight) {

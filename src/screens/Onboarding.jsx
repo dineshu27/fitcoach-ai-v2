@@ -88,13 +88,14 @@ export default function Onboarding() {
     name: "", age: "", weight: "", height: "", sex: "Male", activity: "Moderately active",
     ethnicity: "",
     conditions: ["None"], notes: "",
-    goals: [], bodyFocus: "",
+    goals: [], bodyFocus: [],
     diet: "No restriction", workout: "Gym", fitnessLevel: "Beginner", daysPerWeek: 4,
   });
 
   const set = (k) => (v) => setForm((f) => ({ ...f, [k]: v }));
   const sv = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
-  const toggleGoal = (l) => set("goals")(form.goals.includes(l) ? form.goals.filter((g) => g !== l) : [...form.goals, l]);
+  const toggleGoal  = (l) => set("goals")(form.goals.includes(l) ? form.goals.filter((g) => g !== l) : [...form.goals, l]);
+  const toggleFocus = (l) => set("bodyFocus")(form.bodyFocus.includes(l) ? form.bodyFocus.filter((f) => f !== l) : [...form.bodyFocus, l]);
 
   const bmi = form.weight && form.height ? calcBMI(+form.weight, +form.height) : null;
   const bmiCat = bmi ? bmiCategory(bmi) : null;
@@ -104,13 +105,18 @@ export default function Onboarding() {
   const canNext = [
     !!(form.name && form.age && form.weight && form.height),
     true,
-    !!(form.goals.length > 0 && form.bodyFocus && form.diet && form.workout && form.fitnessLevel),
+    !!(form.goals.length > 0 && form.bodyFocus.length > 0 && form.diet && form.workout && form.fitnessLevel),
   ];
 
   async function generate() {
     setLoading(true); setError("");
     try {
-      const profile = { ...form, age: +form.age, weight: +form.weight, height: +form.height, daysPerWeek: +form.daysPerWeek, goal: form.goals.join(", ") };
+      const profile = {
+        ...form,
+        age: +form.age, weight: +form.weight, height: +form.height, daysPerWeek: +form.daysPerWeek,
+        goal: form.goals.join(", "),
+        bodyFocus: form.bodyFocus.join(" + ") || "Full body",
+      };
       const bmi2 = calcBMI(profile.weight, profile.height);
       const bmr2 = calcBMR(profile.weight, profile.height, profile.age, profile.sex);
       const tdee2 = calcTDEE(bmr2, profile.activity);
@@ -236,13 +242,35 @@ export default function Onboarding() {
               </div>
 
               {/* Live BMI card */}
-              {bmi && (
+              {bmi && bmiCat && (
                 <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-                  className="rounded-2xl p-4" style={{ background: "rgba(var(--c-accent-rgb),0.08)", border: "1px solid rgba(var(--c-accent-rgb),0.25)" }}>
-                  <p className="text-xs font-semibold mb-3" style={{ color: "var(--c-accent)" }}>Your stats</p>
-                  <div className="flex gap-6">
-                    <div><p className="text-3xl font-extrabold" style={{ color: bmiCat?.color }}>{bmi}</p><p className="text-xs" style={{ color: "var(--c-sub)" }}>BMI · {bmiCat?.label}</p></div>
-                    {tdee && <div><p className="text-3xl font-extrabold" style={{ color: "var(--c-text)" }}>{tdee}</p><p className="text-xs" style={{ color: "var(--c-sub)" }}>TDEE kcal</p></div>}
+                  className="rounded-2xl p-4"
+                  style={{ background: `${bmiCat.color}18`, border: `1px solid ${bmiCat.color}55` }}>
+                  <p className="text-xs font-bold uppercase tracking-wide mb-3" style={{ color: bmiCat.color }}>Your stats</p>
+                  <div className="flex gap-5 mb-3">
+                    <div>
+                      <p className="text-3xl font-extrabold" style={{ color: bmiCat.color }}>{bmi}</p>
+                      <span className="inline-block mt-1 rounded-full px-2.5 py-0.5 text-xs font-bold"
+                        style={{ background: `${bmiCat.color}25`, color: bmiCat.color }}>
+                        {bmiCat.label}
+                      </span>
+                    </div>
+                    {tdee && (
+                      <div>
+                        <p className="text-3xl font-extrabold" style={{ color: "var(--c-text)" }}>{tdee}</p>
+                        <p className="text-xs mt-1" style={{ color: "var(--c-sub)" }}>TDEE kcal/day</p>
+                      </div>
+                    )}
+                  </div>
+                  {/* BMI scale bar */}
+                  <div className="relative h-2 rounded-full overflow-hidden flex" style={{ background: "rgba(255,255,255,0.1)" }}>
+                    {[{ color: "#38BDF8", w: 23 }, { color: "#22C55E", w: 20 }, { color: "#F97316", w: 17 }, { color: "#EF4444", w: 40 }]
+                      .map((s, i) => <div key={i} style={{ width: `${s.w}%`, background: s.color, opacity: 0.7 }} />)}
+                    <div className="absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full border-2 border-white shadow"
+                      style={{ left: `${Math.min(Math.max(((parseFloat(bmi) - 10) / 30) * 100, 1), 97)}%`, transform: "translate(-50%, -50%)", background: bmiCat.color }} />
+                  </div>
+                  <div className="flex justify-between mt-1 text-[9px]" style={{ color: "var(--c-sub)" }}>
+                    <span>Under</span><span>Normal</span><span>Over</span><span>Obese</span>
                   </div>
                 </motion.div>
               )}
@@ -318,15 +346,18 @@ export default function Onboarding() {
                 </div>
               </div>
 
-              {/* Body focus */}
+              {/* Body focus — multiselect */}
               <div>
-                <label className="block text-xs font-semibold mb-2" style={{ color: "var(--c-sub)" }}>Workout focus</label>
-                <div className="space-y-2">
+                <label className="block text-xs font-semibold mb-1" style={{ color: "var(--c-sub)" }}>
+                  Workout focus <span style={{ color: "var(--c-accent)" }}>(select all that apply)</span>
+                </label>
+                {form.bodyFocus.length === 0 && <p className="text-xs mb-2" style={{ color: "#FF6B6B" }}>Select at least one focus area</p>}
+                <div className="space-y-2 mt-2">
                   {BODY_FOCUS.map(({ emoji, label, desc }) => {
-                    const sel = form.bodyFocus === label;
+                    const sel = form.bodyFocus.includes(label);
                     return (
-                      <button key={label} type="button" onClick={() => set("bodyFocus")(label)}
-                        className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left transition-all"
+                      <button key={label} type="button" onClick={() => toggleFocus(label)}
+                        className="relative flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left transition-all"
                         style={{ background: sel ? "rgba(var(--c-accent-rgb),0.12)" : "var(--c-card)",
                           border: sel ? "1.5px solid var(--c-accent)" : "1px solid rgba(var(--c-accent-rgb),0.15)",
                           boxShadow: sel ? "0 0 12px rgba(var(--c-accent-rgb),0.2)" : "none" }}>
@@ -335,9 +366,7 @@ export default function Onboarding() {
                           <p className="text-sm font-bold" style={{ color: sel ? "var(--c-accent)" : "var(--c-text)" }}>{label}</p>
                           <p className="text-xs" style={{ color: "var(--c-sub)" }}>{desc}</p>
                         </div>
-                        {sel && <div className="h-4 w-4 rounded-full flex items-center justify-center" style={{ background: "var(--c-accent)" }}>
-                          <div className="h-2 w-2 rounded-full bg-white" />
-                        </div>}
+                        {sel && <CheckCircle2 size={16} style={{ color: "var(--c-accent)", flexShrink: 0 }} />}
                       </button>
                     );
                   })}
@@ -369,11 +398,11 @@ export default function Onboarding() {
               {error && <div className="rounded-xl p-3 text-sm" style={{ background: "rgba(255,107,107,0.1)", border: "1px solid rgba(255,107,107,0.3)", color: "#FF6B6B" }}>{error}</div>}
 
               {/* Summary */}
-              {form.goals.length > 0 && form.bodyFocus && (
+              {form.goals.length > 0 && form.bodyFocus.length > 0 && (
                 <div className="rounded-2xl p-4 space-y-1.5" style={{ background: "var(--c-cool-bg)", border: "1px solid var(--c-cool-border)" }}>
                   <p className="text-xs font-bold" style={{ color: "#4ECDC4" }}>Plan preview</p>
                   <p className="text-xs" style={{ color: "var(--c-sub)" }}>🎯 {form.goals.join(" · ")}</p>
-                  <p className="text-xs" style={{ color: "var(--c-sub)" }}>💪 {form.bodyFocus} · {form.workout} · {form.daysPerWeek} days/week</p>
+                  <p className="text-xs" style={{ color: "var(--c-sub)" }}>💪 {form.bodyFocus.join(" · ")} · {form.workout} · {form.daysPerWeek} days/week</p>
                 </div>
               )}
             </motion.div>

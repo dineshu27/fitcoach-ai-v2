@@ -7,6 +7,7 @@ export default defineConfig({
   test: {
     environment: "jsdom",
     globals: true,
+    exclude: ["**/node_modules/**", "**/.claude/**"],
     coverage: { reporter: ["text", "json-summary"] },
   },
   server: {

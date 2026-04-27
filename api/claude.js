@@ -1,7 +1,7 @@
 // Vercel serverless function — proxies requests to Anthropic API.
 // The API key lives here (server-side) and is never exposed to the browser.
 
-const MAX_BODY_BYTES = 128 * 1024; // 128 KB
+const MAX_BODY_BYTES = 1024 * 1024; // 1 MB — supports vision (base64 image) payloads
 const MAX_MESSAGES   = 60;
 
 export default async function handler(req, res) {
@@ -29,10 +29,20 @@ export default async function handler(req, res) {
   if (!Array.isArray(messages) || messages.length === 0 || messages.length > MAX_MESSAGES) {
     return res.status(400).json({ error: "Invalid messages" });
   }
-  // Each message must have role + string content
+  // Each message must have role + string OR array content (array = vision blocks)
   for (const m of messages) {
-    if (!["user", "assistant"].includes(m.role) || typeof m.content !== "string") {
+    if (!["user", "assistant"].includes(m.role)) {
       return res.status(400).json({ error: "Invalid message format" });
+    }
+    if (typeof m.content !== "string" && !Array.isArray(m.content)) {
+      return res.status(400).json({ error: "Invalid message format" });
+    }
+    if (Array.isArray(m.content)) {
+      for (const block of m.content) {
+        if (!["text", "image"].includes(block.type)) {
+          return res.status(400).json({ error: "Invalid content block type" });
+        }
+      }
     }
   }
   if (typeof max_tokens !== "number" || max_tokens < 1 || max_tokens > 16000) {

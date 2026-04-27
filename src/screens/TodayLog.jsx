@@ -6,10 +6,10 @@ import { pressable } from "../motion/presets";
 import { dur } from "../motion/tokens";
 import {
   Search, Plus, Minus, Flame, Droplets, X, ChevronDown,
-  CheckCircle2, Utensils, Dumbbell, RefreshCw, Zap, Sparkles, Edit2, Check,
+  CheckCircle2, Utensils, Dumbbell, RefreshCw, Zap, Sparkles, Edit2, Check, Camera,
 } from "lucide-react";
 import { cache } from "../lib/cache";
-import { parseAutoLog } from "../lib/api";
+import { parseAutoLog, analyzeFoodPhoto } from "../lib/api";
 import REX from "../components/REX";
 
 /* ── Food database ─────────────────────────────────────────────────── */
@@ -180,6 +180,50 @@ function getSuggestions(ethnicity) {
     }
   }
   return ETHNICITY_SUGGESTIONS.default;
+}
+
+/* ── Image resize helper ───────────────────────────────────────────── */
+async function resizeImage(file, maxDim = 640, quality = 0.72) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      const scale = Math.min(1, maxDim / Math.max(img.width, img.height));
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.round(img.width * scale);
+      canvas.height = Math.round(img.height * scale);
+      canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
+      URL.revokeObjectURL(url);
+      resolve({ base64: canvas.toDataURL("image/jpeg", quality).split(",")[1], mediaType: "image/jpeg" });
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("Failed to load image")); };
+    img.src = url;
+  });
+}
+
+/* ── Photo scan shimmer ────────────────────────────────────────────── */
+function PhotoShimmer() {
+  return (
+    <motion.div
+      className="rounded-xl p-4 space-y-2.5"
+      style={{ background: "var(--c-input)", border: "1px solid var(--c-border)" }}
+      animate={{ opacity: [0.55, 1, 0.55] }}
+      transition={{ duration: 1.3, repeat: Infinity, ease: "easeInOut" }}
+    >
+      <div className="flex items-center gap-3">
+        <div className="h-8 w-8 rounded-full flex-shrink-0" style={{ background: "var(--c-border)" }} />
+        <div className="flex-1 space-y-1.5">
+          <div className="h-3.5 rounded-full w-3/4" style={{ background: "var(--c-border)" }} />
+          <div className="h-2.5 rounded-full w-1/2" style={{ background: "var(--c-border)" }} />
+        </div>
+      </div>
+      <div className="flex gap-3 pt-1">
+        {["w-1/3","w-1/4","w-1/4"].map((w, i) => (
+          <div key={i} className={`h-7 rounded-lg ${w}`} style={{ background: "var(--c-border)" }} />
+        ))}
+      </div>
+    </motion.div>
+  );
 }
 
 /* ── Food Search ──────────────────────────────────────────────────── */
@@ -507,9 +551,11 @@ function ExerciseLog({ plan }) {
 
   function toggle(name) {
     const updated = new Set(doneSet);
+    const becomingDone = !updated.has(name);
     if (updated.has(name)) { updated.delete(name); cache.unmarkExerciseDone(name); }
     else { updated.add(name); cache.markExerciseDone(name); }
     setDoneSet(new Set(updated));
+    if (becomingDone) navigator.vibrate?.(80);
   }
 
   function addCustom() {
@@ -763,10 +809,33 @@ export default function TodayLog({ preloadExercise }) {
   const pct = Math.min(1, log.calories / calorieTarget);
   const over = log.calories > calorieTarget;
 
+  const photoRef = useRef(null);
+  const [photoScanning, setPhotoScanning] = useState(false);
+  const [photoError, setPhotoError]       = useState("");
+
   function refresh() { setLog(cache.getTodayLog()); }
   function handleAdd(name, cal, macros) { cache.logCalories(name, cal, macros); refresh(); }
   function handleUndo() { cache.removeLastFood(); refresh(); }
   function handleWater(g) { cache.setWater(g); refresh(); }
+
+  async function handlePhotoCapture(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setPhotoScanning(true);
+    setPhotoError("");
+    try {
+      const { base64, mediaType } = await resizeImage(file);
+      const result = await analyzeFoodPhoto(base64, mediaType);
+      const macros = { protein: result.protein || 0, carbs: result.carbs || 0, fat: result.fat || 0 };
+      handleAdd(`${result.name} (${result.quantity}${result.unit})`, result.calories || 0, macros);
+      setFoodSearchPrefill(result.name);
+    } catch (err) {
+      setPhotoError(err.message || "Couldn't analyse photo. Try manual search.");
+    } finally {
+      setPhotoScanning(false);
+      if (photoRef.current) photoRef.current.value = "";
+    }
+  }
 
   const dateStr = new Date().toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" });
 
@@ -891,8 +960,29 @@ export default function TodayLog({ preloadExercise }) {
           <>
             <div className="rounded-2xl p-4"
               style={{ background: "var(--c-card)", border: "1px solid var(--c-border)", boxShadow: "var(--c-card-shadow)" }}>
-              <p className="text-sm font-bold mb-3" style={{ color: "var(--c-text)" }}>Add Food</p>
-              <FoodSearch onAdd={handleAdd} preloadName={foodSearchPrefill} key={foodSearchPrefill} />
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-sm font-bold" style={{ color: "var(--c-text)" }}>Add Food</p>
+                <button
+                  onClick={() => photoRef.current?.click()}
+                  disabled={photoScanning}
+                  className="flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold transition-all active:scale-95 disabled:opacity-50"
+                  style={{ background: "var(--c-accent-bg)", border: "1px solid var(--c-border-bright)", color: "var(--c-accent)" }}>
+                  <Camera size={13} /> {photoScanning ? "Scanning…" : "Scan"}
+                </button>
+                <input ref={photoRef} type="file" accept="image/*" capture="environment"
+                  className="hidden" onChange={handlePhotoCapture} />
+              </div>
+              {photoError && (
+                <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }}
+                  className="mb-3 rounded-xl px-3 py-2 text-xs"
+                  style={{ background: "rgba(255,107,107,0.1)", border: "1px solid rgba(255,107,107,0.3)", color: "#FF6B6B" }}>
+                  {photoError}
+                </motion.div>
+              )}
+              {photoScanning
+                ? <PhotoShimmer />
+                : <FoodSearch onAdd={handleAdd} preloadName={foodSearchPrefill} key={foodSearchPrefill} />
+              }
             </div>
 
             <div className="rounded-2xl p-4"

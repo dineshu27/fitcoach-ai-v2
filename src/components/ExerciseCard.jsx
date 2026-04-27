@@ -2,6 +2,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown, ChevronUp, Info, PlayCircle, ClipboardList, CheckCircle2, Plus } from "lucide-react";
 import VideoModal from "./VideoModal";
+import AchievementToast from "./AchievementToast";
 import { cache } from "../lib/cache";
 import { expandCollapse, checkPop } from "../motion/variants";
 import { pressable, pressablePrimary, cardInteractive } from "../motion/presets";
@@ -40,6 +41,7 @@ function SetTracker({ exercise }) {
     if (saved) return saved;
     return Array.from({ length: numSets }, (_, i) => ({ set: i + 1, weight: "", reps: defaultReps, done: false }));
   });
+  const [showPB, setShowPB] = useState(null); // { weight, label }
 
   const prev = cache.getPrevExerciseLog(exercise.name);
 
@@ -53,6 +55,22 @@ function SetTracker({ exercise }) {
     const next = logs.map((s, i) => i === idx ? { ...s, done: !s.done } : s);
     setLogs(next);
     cache.logExerciseSet(exercise.name, next);
+
+    const toggled = next[idx];
+
+    if (toggled.done) {
+      // Haptic: short pulse on set done
+      navigator.vibrate?.(80);
+
+      // Personal best detection
+      const weight = parseFloat(toggled.weight);
+      if (weight > 0 && prev) {
+        const prevBest = Math.max(0, ...prev.sets.map(s => parseFloat(s.weight) || 0));
+        if (weight > prevBest) {
+          setShowPB({ label: `${exercise.name} — ${weight}kg` });
+        }
+      }
+    }
   }
 
   function addSet() {
@@ -143,6 +161,17 @@ function SetTracker({ exercise }) {
         style={{ color: "var(--c-sub)", borderTop: "1px solid var(--c-border)" }}>
         <Plus size={12} /> Add Set
       </button>
+
+      {/* Personal best toast */}
+      <AnimatePresence>
+        {showPB && (
+          <AchievementToast
+            type="personal_best"
+            label={showPB.label}
+            onDismiss={() => setShowPB(null)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }

@@ -334,6 +334,61 @@ Rules:
   return validatePlan(parsed);
 }
 
+export async function analyzeFoodPhoto(base64, mediaType = "image/jpeg") {
+  const body = {
+    model: "claude-sonnet-4-6",
+    max_tokens: 400,
+    messages: [{
+      role: "user",
+      content: [
+        { type: "image", source: { type: "base64", media_type: mediaType, data: base64 } },
+        {
+          type: "text",
+          text: `Identify the main food item in this image. Return ONLY valid JSON, no markdown:
+{"name":"food name","quantity":150,"unit":"g","calories":300,"protein":25,"carbs":30,"fat":8}
+- name: short common name (e.g. "Chicken breast", "Fried rice", "Apple")
+- quantity: estimated serving size as integer
+- unit: "g" or "ml"
+- calories/protein/carbs/fat: per the estimated serving (integers)
+If multiple foods, pick the dominant one. If no food is visible, return {"error":"no food detected"}.`,
+        },
+      ],
+    }],
+  };
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 45000);
+  let res;
+  try {
+    res = await fetch(API_URL, {
+      method: "POST",
+      signal: controller.signal,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+  } catch (e) {
+    if (e.name === "AbortError") throw new Error("Request timed out. Please try again.");
+    throw new Error("Network error. Check your connection.");
+  } finally {
+    clearTimeout(timer);
+  }
+
+  if (!res.ok) {
+    if (res.status === 429) throw new Error("Too many requests. Please wait a moment.");
+    if (res.status === 413) throw new Error("Photo too large. Please try a smaller image.");
+    throw new Error("Failed to analyse photo. Please try again.");
+  }
+
+  const data = await res.json();
+  const text = data.content.map(b => b.text || "").join("");
+  let cleaned = text.replace(/```json\s*/g, "").replace(/```\s*/g, "").trim();
+  const s = cleaned.indexOf("{"), e = cleaned.lastIndexOf("}");
+  if (s !== -1 && e !== -1) cleaned = cleaned.slice(s, e + 1);
+  const result = JSON.parse(cleanJson(cleaned));
+  if (result.error) throw new Error(result.error);
+  return result;
+}
+
 export async function parseAutoLog(text) {
   const system = `You are a nutrition and fitness data extractor. Extract food items and exercises from natural language text.
 Return ONLY valid JSON, no explanation. Format:

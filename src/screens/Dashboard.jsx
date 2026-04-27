@@ -1,11 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   Flame, Droplets, Dumbbell, Zap, ChevronRight, Info,
   Target, UtensilsCrossed, MapPin, Sun, Cloud, CloudSun,
   CloudRain, Snowflake, CloudDrizzle, CloudLightning, ClipboardList,
-  Moon, Sunset,
+  Moon, Sunset, TrendingUp,
 } from "lucide-react";
 import REX from "../components/REX";
 import { cache } from "../lib/cache";
@@ -13,6 +13,7 @@ import { bmiCategory, dayStreak } from "../lib/calculations";
 import { useTheme } from "../lib/theme";
 import { staggerContainer, staggerItem, fadeUp } from "../motion/variants";
 import { pressable, pressablePrimary, cardInteractive } from "../motion/presets";
+import { dur } from "../motion/tokens";
 
 const DAYS = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
 
@@ -157,6 +158,140 @@ const MEAL_BORDER = {
   dinner:    "#F87171",
   snacks:    "var(--c-cool)",
 };
+
+/* ── Macro progress ring (compact) ──────────────────────────────── */
+function SmallMacroRing({ label, consumed, target, color, size = 74 }) {
+  const r = (size - 12) / 2;
+  const circ = 2 * Math.PI * r;
+  const pct = target > 0 ? Math.min(1, consumed / target) : 0;
+  const over = consumed > target;
+  const stroke = over ? "#F87171" : color;
+  return (
+    <div className="flex flex-col items-center">
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none"
+          stroke="var(--c-pill-inactive)" strokeWidth="5.5" />
+        <motion.circle
+          cx={size / 2} cy={size / 2} r={r} fill="none"
+          stroke={stroke} strokeWidth="5.5" strokeLinecap="round"
+          strokeDasharray={circ}
+          initial={{ strokeDashoffset: circ }}
+          animate={{ strokeDashoffset: circ * (1 - pct) }}
+          transition={{ duration: dur.progress, ease: "easeOut", delay: 0.12 }}
+          transform={`rotate(-90 ${size / 2} ${size / 2})`}
+        />
+        <text x="50%" y="44%" dominantBaseline="middle" textAnchor="middle"
+          fontSize="11" fontWeight="800" fill="var(--c-text)" fontFamily="Space Grotesk, sans-serif">
+          {consumed}
+        </text>
+        <text x="50%" y="65%" dominantBaseline="middle" textAnchor="middle"
+          fontSize="7.5" fill="var(--c-sub)" fontFamily="Space Grotesk, sans-serif">
+          /{target}g
+        </text>
+      </svg>
+      <p className="text-[9px] font-bold mt-0.5" style={{ color: stroke }}>{label}</p>
+    </div>
+  );
+}
+
+/* ── Weekly progress chart (pure SVG) ────────────────────────────── */
+function WeeklyChart({ calorieTarget }) {
+  const last7 = useMemo(() =>
+    Array.from({ length: 7 }, (_, i) => {
+      const d = new Date();
+      d.setDate(d.getDate() - (6 - i));
+      const key = d.toDateString();
+      const log = cache.getDailyLog(key);
+      return {
+        label: d.toLocaleDateString("en-GB", { weekday: "short" }),
+        calories: log.calories || 0,
+        hasWorkout: (log.doneExercises || []).length > 0,
+        isToday: i === 6,
+      };
+    }),
+  []);
+
+  const maxCal = Math.max(calorieTarget * 1.25, ...last7.map(d => d.calories), 200);
+  const W = 300, H = 108;
+  const pL = 4, pR = 4, pT = 14, pB = 30;
+  const cW = W - pL - pR;
+  const cH = H - pT - pB;
+
+  const pts = last7.map((d, i) => ({
+    x: pL + (i / 6) * cW,
+    y: pT + cH * (1 - d.calories / maxCal),
+    ...d,
+  }));
+
+  const lineD = pts.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(" ");
+  const areaD = `${lineD} L ${pts[6].x.toFixed(1)} ${(H - pB).toFixed(1)} L ${pts[0].x.toFixed(1)} ${(H - pB).toFixed(1)} Z`;
+  const targetY = (pT + cH * (1 - Math.min(1, calorieTarget / maxCal))).toFixed(1);
+  const hasData = last7.some(d => d.calories > 0);
+
+  return (
+    <div className="rounded-2xl overflow-hidden"
+      style={{ background: "var(--c-card)", border: "1px solid var(--c-border)", boxShadow: "var(--c-card-shadow)" }}>
+      <div className="px-4 pt-3 pb-1 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <TrendingUp size={14} style={{ color: "var(--c-accent)" }} />
+          <span className="text-sm font-bold" style={{ color: "var(--c-text)" }}>Weekly Progress</span>
+        </div>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1">
+            <div className="w-2 h-2 rounded-full" style={{ background: "var(--c-accent)" }} />
+            <span className="text-[9px]" style={{ color: "var(--c-sub)" }}>Calories</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <div className="w-2 h-2 rounded-full" style={{ background: "var(--c-cool)" }} />
+            <span className="text-[9px]" style={{ color: "var(--c-sub)" }}>Workout</span>
+          </div>
+        </div>
+      </div>
+      <svg viewBox={`0 0 ${W} ${H}`} style={{ width: "100%", height: "auto", display: "block" }}>
+        <defs>
+          <linearGradient id="wkGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="var(--c-accent)" stopOpacity="0.28" />
+            <stop offset="100%" stopColor="var(--c-accent)" stopOpacity="0" />
+          </linearGradient>
+        </defs>
+        {/* Target dashed line */}
+        <line x1={pL} y1={targetY} x2={W - pR} y2={targetY}
+          stroke="var(--c-border)" strokeWidth="1" strokeDasharray="3 3" />
+        {/* Gradient fill */}
+        {hasData && <path d={areaD} fill="url(#wkGrad)" />}
+        {/* Animated line */}
+        {hasData && (
+          <motion.path d={lineD} fill="none" stroke="var(--c-accent)" strokeWidth="2"
+            strokeLinecap="round" strokeLinejoin="round"
+            initial={{ pathLength: 0, opacity: 0 }}
+            animate={{ pathLength: 1, opacity: 1 }}
+            transition={{ duration: dur.celebration, ease: "easeOut" }}
+          />
+        )}
+        {/* Points, labels, workout dots */}
+        {pts.map((p, i) => (
+          <g key={i}>
+            <circle cx={p.x} cy={p.calories > 0 ? p.y : H - pB - 6}
+              r={p.isToday ? 4.5 : 3}
+              fill={p.calories > 0 ? "var(--c-accent)" : "var(--c-border)"}
+              stroke={p.isToday && p.calories > 0 ? "var(--c-bg)" : "none"}
+              strokeWidth="2"
+            />
+            <text x={p.x} y={H - 15} textAnchor="middle" fontSize="8"
+              fill={p.isToday ? "var(--c-accent)" : "var(--c-sub)"}
+              fontWeight={p.isToday ? "700" : "500"}
+              fontFamily="Space Grotesk, sans-serif">
+              {p.label}
+            </text>
+            {p.hasWorkout && (
+              <circle cx={p.x} cy={H - 4} r={3} fill="var(--c-cool)" />
+            )}
+          </g>
+        ))}
+      </svg>
+    </div>
+  );
+}
 
 /* ── Calorie ring (SVG) ──────────────────────────────────────────── */
 function CalRing({ consumed, target, size = 68 }) {
@@ -307,10 +442,10 @@ export default function Dashboard() {
 
       <div className="px-4 mt-4">
 
-        {/* ── Daily macro targets (top) ────────────────────────────── */}
+        {/* ── Today's macro rings ─────────────────────────────────── */}
         {plan.macros && (
           <div>
-            <SectionHeader title="Daily targets" />
+            <SectionHeader title="Today's macros" />
             <motion.div
               className="grid grid-cols-4 gap-2"
               variants={staggerContainer}
@@ -318,15 +453,15 @@ export default function Dashboard() {
               animate="show"
             >
               {[
-                { label: "Protein", val: plan.macros.protein, color: "var(--c-accent)" },
-                { label: "Carbs",   val: plan.macros.carbs,   color: "var(--c-warn)" },
-                { label: "Fat",     val: plan.macros.fat,      color: "#F87171" },
-                { label: "Fibre",   val: plan.macros.fibre,    color: "var(--c-cool)" },
-              ].map(({ label, val, color }) => (
-                <motion.div key={label} variants={staggerItem} className="rounded-2xl p-3 text-center"
+                { label: "Protein", consumed: todayLog.protein || 0, target: plan.macros.protein || 150, color: "var(--c-accent)" },
+                { label: "Carbs",   consumed: todayLog.carbs   || 0, target: plan.macros.carbs   || 250, color: "var(--c-warn)" },
+                { label: "Fat",     consumed: todayLog.fat     || 0, target: plan.macros.fat     ||  70, color: "#F87171" },
+                { label: "Fibre",   consumed: 0,                     target: plan.macros.fibre   ||  30, color: "var(--c-cool)" },
+              ].map(({ label, consumed, target, color }) => (
+                <motion.div key={label} variants={staggerItem}
+                  className="rounded-2xl py-3 flex items-center justify-center"
                   style={{ background: "var(--c-card)", border: "1px solid var(--c-border)", boxShadow: "var(--c-card-shadow)" }}>
-                  <p className="text-base font-extrabold" style={{ color }}>{val}g</p>
-                  <p className="text-[9px] mt-0.5 font-semibold" style={{ color: "var(--c-sub)" }}>{label}</p>
+                  <SmallMacroRing label={label} consumed={consumed} target={target} color={color} />
                 </motion.div>
               ))}
             </motion.div>
@@ -395,6 +530,12 @@ export default function Dashboard() {
             </motion.div>
           ))}
         </motion.div>
+
+        {/* ── Weekly progress chart ──────────────────────────────── */}
+        <div className="mt-5">
+          <SectionHeader title="This week" />
+          <WeeklyChart calorieTarget={plan.calories} />
+        </div>
 
         {/* ── Quick actions ──────────────────────────────────────── */}
         <div className="flex gap-3 mt-4">

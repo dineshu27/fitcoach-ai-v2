@@ -151,8 +151,11 @@ describe("rexChat", () => {
     mockFetchOk("Reply");
     await rexChat(msgs, baseProfile, plan);
     const body = JSON.parse(globalThis.fetch.mock.calls[0][1].body);
-    expect(body.system).toContain("Test User");
-    expect(body.system).toContain("FiTAi");
+    const systemText = Array.isArray(body.system)
+      ? body.system.map(b => b.text || "").join("")
+      : body.system || "";
+    expect(systemText).toContain("Test User");
+    expect(systemText).toContain("FiTAi");
   });
 
   it("throws safe error on network failure", async () => {

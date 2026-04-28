@@ -36,6 +36,8 @@
   --rex-hulld:       rgba(8,5,3,0.98);
   --rex-stroke:      rgba(252,76,2,0.40);
   --rex-hi:          rgba(253,186,116,0.20);
+  --c-skeleton:      #2A241F;
+  --c-skeleton-shine: rgba(255,255,255,0.06);
 }
 
 /* ── LIGHT (explicit) ────────────────────────────────────────── */
@@ -67,6 +69,8 @@
   --rex-hulld:       rgba(14,7,3,0.96);
   --rex-stroke:      rgba(232,66,10,0.55);
   --rex-hi:          rgba(253,186,116,0.30);
+  --c-skeleton: #F0E8E4;
+  --c-skeleton-shine: rgba(255,255,255,0.4);
 }
 
 /* ── AUTO — follows system when data-theme is absent ─────────── */
@@ -97,6 +101,8 @@
     --rex-hulld:       rgba(14,7,3,0.96);
     --rex-stroke:      rgba(232,66,10,0.55);
     --rex-hi:          rgba(253,186,116,0.30);
+    --c-skeleton: #F0E8E4;
+    --c-skeleton-shine: rgba(255,255,255,0.4);
   }
 }
 

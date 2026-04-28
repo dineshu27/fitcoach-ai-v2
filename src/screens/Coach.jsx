@@ -81,8 +81,11 @@ export default function Coach() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState("");
+  const [showScrollPill, setShowScrollPill] = useState(false);
+  const [inputFocused, setInputFocused] = useState(false);
   const bottomRef = useRef(null);
   const inputRef = useRef(null);
+  const listRef = useRef(null);
 
   const lastMsg = messages[messages.length - 1];
   const fitaiState = detectState(lastMsg, loading);
@@ -100,6 +103,17 @@ export default function Coach() {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
     if (messages.length > 0) cache.saveChat(messages);
   }, [messages]);
+
+  useEffect(() => {
+    const list = listRef.current;
+    if (!list) return;
+    function onScroll() {
+      const dist = list.scrollHeight - list.scrollTop - list.clientHeight;
+      setShowScrollPill(dist > 60);
+    }
+    list.addEventListener("scroll", onScroll);
+    return () => list.removeEventListener("scroll", onScroll);
+  }, []);
 
   function showToast(msg) {
     setToast(msg);
@@ -140,7 +154,7 @@ export default function Coach() {
   }
 
   return (
-    <div className="flex flex-col coach-grid" style={{ height: "100svh", background: "var(--c-bg)" }}>
+    <div className="flex flex-col coach-grid" style={{ height: "100svh", background: "var(--c-bg)", position: "relative" }}>
 
       {/* ── Header ──────────────────────────────────────────────────── */}
       <div className="flex-shrink-0 flex items-center gap-2 px-4 pb-3"
@@ -182,7 +196,7 @@ export default function Coach() {
       </div>
 
       {/* ── Messages ─────────────────────────────────────────────────── */}
-      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3" style={{ paddingBottom: 16 }}>
+      <div ref={listRef} className="flex-1 overflow-y-auto px-4 py-4 space-y-3" style={{ paddingBottom: 16, position: "relative" }}>
         {messages.map((msg) => (
           // ChatBubble manages its own entry animation — no wrapper needed
           <ChatBubble key={msg.id} message={msg} />
@@ -190,6 +204,18 @@ export default function Coach() {
         {loading && <TypingIndicator />}
         <div ref={bottomRef} />
       </div>
+
+      {/* Scroll-to-bottom pill */}
+      <AnimatePresence>
+        {showScrollPill && (
+          <motion.button
+            initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 8 }}
+            onClick={() => bottomRef.current?.scrollIntoView({ behavior: "smooth" })}
+            style={{ position: "absolute", bottom: 80, right: 16, padding: "5px 10px", borderRadius: 14, background: "var(--c-accent)", color: "#fff", fontSize: 12, fontWeight: 500, border: "none", cursor: "pointer", zIndex: 10 }}>
+            ↓ New message
+          </motion.button>
+        )}
+      </AnimatePresence>
 
       {/* ── Quick prompts + input ────────────────────────────────────── */}
       <div className="flex-shrink-0" style={{ background: "var(--c-nav)", backdropFilter: "blur(16px)", borderTop: "1px solid var(--c-border)" }}>
@@ -216,12 +242,14 @@ export default function Coach() {
         {/* Input row */}
         <div className="flex items-center gap-2 px-4 pt-2 pb-safe" style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 12px)" }}>
           <div className="flex flex-1 items-center rounded-full px-4 py-2.5 transition-all"
-            style={{ background: "var(--c-input)", border: "1px solid var(--c-border)" }}>
+            style={{ background: "var(--c-input)", border: `1px solid ${inputFocused ? "var(--c-accent)" : "var(--c-border)"}`, transition: "border-color 0.2s" }}>
             <input
               ref={inputRef}
               value={input}
               onChange={(e) => setInput(e.target.value.slice(0, 500))}
               onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && remaining > 0 && send()}
+              onFocus={() => setInputFocused(true)}
+              onBlur={() => setInputFocused(false)}
               placeholder={remaining > 0 ? "Ask FiTAi anything…" : "No chats left today"}
               disabled={remaining <= 0}
               className="flex-1 bg-transparent text-sm outline-none disabled:opacity-50"

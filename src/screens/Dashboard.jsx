@@ -14,6 +14,8 @@ import { useTheme } from "../lib/theme";
 import { staggerContainer, staggerItem, fadeUp } from "../motion/variants";
 import { pressable, pressablePrimary, cardInteractive } from "../motion/presets";
 import { dur } from "../motion/tokens";
+import { confettiBurst } from "../motion/confetti";
+import { useCountUp } from "../motion/useCountUp";
 
 const DAYS = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
 
@@ -357,6 +359,26 @@ export default function Dashboard() {
   const isRestDay = todayPlan?.workout?.type === "Rest";
   const aiTip = getAITip({ goals: goalList, isRest: isRestDay });
 
+  const remaining = plan.calories - loggedCal;
+  const calorieStatus = loggedCal >= plan.calories
+    ? { label: "Goal Reached!", color: "#34D399" }
+    : remaining < 200
+    ? { label: "On track ✓", color: "#34D399" }
+    : remaining > plan.calories * 0.5
+    ? { label: `Eat more 💪`, color: "#FBBF24" }
+    : { label: "On track ✓", color: "#34D399" };
+
+  useEffect(() => {
+    if (loggedCal >= plan.calories) {
+      const today = new Date().toISOString().slice(0, 10);
+      const key = `goalReachedToast:${today}`;
+      if (!localStorage.getItem(key)) {
+        localStorage.setItem(key, "1");
+        setTimeout(() => confettiBurst("soft"), 500);
+      }
+    }
+  }, [loggedCal, plan.calories]);
+
   return (
     <div className="min-h-screen pb-nav" style={{ background: "var(--c-bg)" }}>
 
@@ -427,9 +449,9 @@ export default function Dashboard() {
                 <REX state="idle" size="xs" />
               </div>
               <CalRing consumed={loggedCal} target={plan.calories} size={64} />
-              <p className="text-[9px] text-center font-semibold" style={{ color: "var(--c-sub)" }}>
-                / {plan.calories}
-              </p>
+              <div style={{ display: "inline-block", padding: "2px 8px", borderRadius: 20, background: `${calorieStatus.color}20`, fontSize: 10, fontWeight: 500, color: calorieStatus.color, marginTop: 4 }}>
+                {calorieStatus.label}
+              </div>
             </div>
           </div>
 

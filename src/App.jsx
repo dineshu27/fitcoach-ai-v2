@@ -3,6 +3,8 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-route
 import { AnimatePresence, motion } from "framer-motion";
 import { ThemeProvider } from "./lib/theme";
 import { routePage } from "./motion/variants";
+import { AchievementProvider } from "./hooks/useAchievement";
+import AchievementOverlay from "./components/AchievementOverlay";
 
 import Splash from "./screens/Splash";
 import Onboarding from "./screens/Onboarding";
@@ -16,6 +18,10 @@ import BottomNav from "./components/BottomNav";
 
 const AnimationsGallery = import.meta.env.DEV
   ? lazy(() => import("./screens/AnimationsGallery"))
+  : null;
+
+const DevRex = import.meta.env.DEV
+  ? lazy(() => import("./screens/DevRex"))
   : null;
 
 const MAIN = ["/dashboard", "/log", "/diet", "/exercise", "/profile"];
@@ -54,6 +60,9 @@ function AnimatedRoutes() {
                 }
               />
             )}
+            {DevRex && (
+              <Route path="/dev/rex" element={<Suspense fallback={null}><DevRex /></Suspense>} />
+            )}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </motion.div>
@@ -66,9 +75,12 @@ function AnimatedRoutes() {
 export default function App() {
   return (
     <ThemeProvider>
-      <BrowserRouter>
-        <AnimatedRoutes />
-      </BrowserRouter>
+      <AchievementProvider>
+        <BrowserRouter>
+          <AnimatedRoutes />
+        </BrowserRouter>
+        <AchievementOverlay />
+      </AchievementProvider>
     </ThemeProvider>
   );
 }

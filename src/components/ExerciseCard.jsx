@@ -42,6 +42,7 @@ function SetTracker({ exercise }) {
     return Array.from({ length: numSets }, (_, i) => ({ set: i + 1, weight: "", reps: defaultReps, done: false }));
   });
   const [showPB, setShowPB] = useState(null); // { weight, label }
+  const [rpeLog, setRpeLog] = useState({});
 
   const prev = cache.getPrevExerciseLog(exercise.name);
 
@@ -115,42 +116,62 @@ function SetTracker({ exercise }) {
       {/* Set rows */}
       <div className="divide-y" style={{ borderColor: "var(--c-border)" }}>
         {logs.map((s, i) => (
-          <div key={i} className="grid grid-cols-[32px_1fr_1fr_36px] gap-1.5 items-center px-3 py-2"
-            style={{ background: s.done ? "rgba(78,205,196,0.05)" : "transparent" }}>
-            <span className="text-xs font-bold" style={{ color: s.done ? "#4ECDC4" : "var(--c-sub)" }}>{s.set}</span>
-            <input
-              type="number"
-              placeholder="—"
-              value={s.weight}
-              min="0"
-              onChange={(e) => update(i, "weight", e.target.value)}
-              className="rounded-lg px-2 py-1 text-xs text-center outline-none w-full"
-              style={{ background: "var(--c-input, var(--c-card))", border: "1px solid var(--c-border)", color: "var(--c-text)" }}
-            />
-            <input
-              type="number"
-              value={s.reps}
-              min="1"
-              onChange={(e) => update(i, "reps", parseInt(e.target.value) || 1)}
-              className="rounded-lg px-2 py-1 text-xs text-center outline-none w-full"
-              style={{ background: "var(--c-input, var(--c-card))", border: "1px solid var(--c-border)", color: "var(--c-text)" }}
-            />
-            <motion.button
-              onClick={() => toggleDone(i)}
-              {...pressable}
-              className="flex items-center justify-center rounded-lg p-1.5"
-              style={{ background: s.done ? "rgba(78,205,196,0.2)" : "var(--c-accent-bg)", border: `1px solid ${s.done ? "rgba(78,205,196,0.4)" : "var(--c-border)"}` }}
-            >
-              <motion.span
-                key={String(s.done)}
-                variants={checkPop}
-                initial="hidden"
-                animate="show"
-                style={{ display: "flex" }}
+          <div key={i}>
+            <div className="grid grid-cols-[32px_1fr_1fr_36px] gap-1.5 items-center px-3 py-2"
+              style={{ background: s.done ? "rgba(78,205,196,0.05)" : "transparent" }}>
+              <span className="text-xs font-bold" style={{ color: s.done ? "#4ECDC4" : "var(--c-sub)" }}>{s.set}</span>
+              <input
+                type="number"
+                placeholder="—"
+                value={s.weight}
+                min="0"
+                onChange={(e) => update(i, "weight", e.target.value)}
+                className="rounded-lg px-2 py-1 text-xs text-center outline-none w-full"
+                style={{ background: "var(--c-input, var(--c-card))", border: "1px solid var(--c-border)", color: "var(--c-text)" }}
+              />
+              <input
+                type="number"
+                value={s.reps}
+                min="1"
+                onChange={(e) => update(i, "reps", parseInt(e.target.value) || 1)}
+                className="rounded-lg px-2 py-1 text-xs text-center outline-none w-full"
+                style={{ background: "var(--c-input, var(--c-card))", border: "1px solid var(--c-border)", color: "var(--c-text)" }}
+              />
+              <motion.button
+                onClick={() => toggleDone(i)}
+                {...pressable}
+                className="flex items-center justify-center rounded-lg p-1.5"
+                style={{ background: s.done ? "rgba(78,205,196,0.2)" : "var(--c-accent-bg)", border: `1px solid ${s.done ? "rgba(78,205,196,0.4)" : "var(--c-border)"}` }}
               >
-                <CheckCircle2 size={14} style={{ color: s.done ? "#4ECDC4" : "var(--c-sub)" }} />
-              </motion.span>
-            </motion.button>
+                <motion.span
+                  key={String(s.done)}
+                  variants={checkPop}
+                  initial="hidden"
+                  animate="show"
+                  style={{ display: "flex" }}
+                >
+                  <CheckCircle2 size={14} style={{ color: s.done ? "#4ECDC4" : "var(--c-sub)" }} />
+                </motion.span>
+              </motion.button>
+            </div>
+            {s.done && (
+              <div style={{ padding: "4px 12px 8px", display: "flex", alignItems: "center", gap: 8 }}>
+                <p style={{ fontSize: 10, color: "var(--c-sub)", marginRight: 4 }}>RPE:</p>
+                {[6, 7, 8, 9, 10].map(rpe => (
+                  <button key={rpe} onClick={() => {
+                    const next = { ...rpeLog, [i]: rpe };
+                    setRpeLog(next);
+                    const today = new Date().toISOString().slice(0, 10);
+                    localStorage.setItem(`setLog:${exercise.name}:${today}:${i}`, JSON.stringify({ weight: s.weight, reps: s.reps, rpe, timestamp: Date.now() }));
+                  }}
+                    style={{ padding: "2px 8px", borderRadius: 10, fontSize: 10, fontWeight: 500, cursor: "pointer", border: "1px solid var(--c-border)",
+                      background: rpeLog[i] === rpe ? "var(--c-accent)" : "transparent",
+                      color: rpeLog[i] === rpe ? "#fff" : "var(--c-sub)" }}>
+                    {rpe}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         ))}
       </div>

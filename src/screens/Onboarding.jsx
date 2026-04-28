@@ -6,6 +6,8 @@ import { cache } from "../lib/cache";
 import { generateWeeklyPlan } from "../lib/api";
 import { calcBMI, calcBMR, calcTDEE, calcTargetCalories, calcMacros, bmiCategory, calcWaterIntake, calcHeartRateZones } from "../lib/calculations";
 import PlanLoading from "./PlanLoading";
+import REX from "../components/REX";
+import ThinkingRing from "../components/ThinkingRing";
 
 const CONDITIONS = ["None","High LDL / High Cholesterol","Type 2 Diabetes","Hypertension (High Blood Pressure)","PCOS","Thyroid condition","Obesity (BMI 30+)","Joint pain / Arthritis"];
 const GOALS = [
@@ -83,6 +85,7 @@ export default function Onboarding() {
   const [step, setStep] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [loadingPhase, setLoadingPhase] = useState(0);
 
   const [form, setForm] = useState({
     name: "", age: "", weight: "", height: "", sex: "Male", activity: "Moderately active",
@@ -109,7 +112,9 @@ export default function Onboarding() {
   ];
 
   async function generate() {
-    setLoading(true); setError("");
+    setLoading(true); setError(""); setLoadingPhase(0);
+    const phaseTimer1 = setTimeout(() => setLoadingPhase(1), 800);
+    const phaseTimer2 = setTimeout(() => setLoadingPhase(2), 1600);
     try {
       const profile = {
         ...form,
@@ -130,12 +135,28 @@ export default function Onboarding() {
       plan.calories = calories; plan.macros = macros; plan.bmi = bmi2; plan.water = water;
       cache.savePlan(plan);
       cache.saveStats({ startDate: new Date().toISOString(), workoutsLogged: 0 });
+      clearTimeout(phaseTimer1); clearTimeout(phaseTimer2);
       navigate("/dashboard", { replace: true });
-    } catch (e) { setError(e.message || "Failed. Check your API key."); }
+    } catch (e) {
+      clearTimeout(phaseTimer1); clearTimeout(phaseTimer2);
+      setError(e.message || "Failed. Check your API key.");
+    }
     finally { setLoading(false); }
   }
 
-  if (loading) return <PlanLoading />;
+  if (loading) return (
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "100svh", background: "var(--c-bg)", padding: "24px" }}>
+      <REX state="thinking" size="md" />
+      <div style={{ marginTop: 20, marginBottom: 12 }}>
+        <ThinkingRing size={48} />
+      </div>
+      <p style={{ fontSize: 16, fontWeight: 500, color: "var(--c-text)", textAlign: "center", marginBottom: 8 }}>
+        {loadingPhase === 0 ? "Reading your goals…" : loadingPhase === 1 ? "Picking exercises that fit your equipment…" : "Balancing your macros…"}
+      </p>
+      <p style={{ fontSize: 12, color: "var(--c-sub)" }}>Personalising your plan</p>
+      {error && <p style={{ marginTop: 16, fontSize: 12, color: "#F87171", textAlign: "center" }}>{error}</p>}
+    </div>
+  );
 
   return (
     <div className="flex min-h-screen flex-col" style={{ background: "var(--c-bg)" }}>
@@ -152,16 +173,25 @@ export default function Onboarding() {
             <p className="text-xs" style={{ color: "var(--c-sub)" }}>Step {step + 1} of 3</p>
             <h2 className="font-bold text-lg" style={{ color: "var(--c-text)" }}>{STEP_TITLES[step]}</h2>
           </div>
+          {step === 1 && (
+            <button onClick={() => setStep(2)} style={{ fontSize: 12, color: "var(--c-accent)", fontWeight: 500, background: "none", border: "none", cursor: "pointer" }}>
+              Skip
+            </button>
+          )}
         </div>
-        {/* Dots progress */}
-        <div className="flex gap-2 mt-3">
-          {[0,1,2].map((i) => (
-            <div key={i} className="rounded-full transition-all" style={{
-              height: 4,
-              flex: i === step ? 3 : 1,
-              background: i <= step ? "var(--c-accent)" : "rgba(var(--c-accent-rgb),0.2)",
-              boxShadow: i === step ? "0 0 8px var(--c-accent)" : "none",
-            }} />
+        {/* Shimmer progress bar */}
+        <div style={{ display: "flex", gap: 4, marginTop: 12 }}>
+          {[0, 1, 2].map((i) => (
+            <div key={i} style={{ flex: 1, height: 3, borderRadius: 2, position: "relative", overflow: "hidden",
+              background: i < step ? "var(--c-accent)" : i === step ? "var(--c-accent)" : "#2A241F" }}>
+              {i === step && (
+                <motion.div
+                  style={{ position: "absolute", inset: 0, background: "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.4) 50%, transparent 100%)" }}
+                  animate={{ x: ["-100%", "100%"] }}
+                  transition={{ duration: 1.6, repeat: Infinity, ease: "linear" }}
+                />
+              )}
+            </div>
           ))}
         </div>
       </div>
@@ -171,7 +201,7 @@ export default function Onboarding() {
 
           {/* STEP 0 */}
           {step === 0 && (
-            <motion.div key="s0" initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }} className="space-y-4">
+            <motion.div key="s0" initial={{ opacity: 0, x: 40 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -40 }} transition={{ type: "spring", stiffness: 280, damping: 30 }} className="space-y-4">
               <Input label="Full name" placeholder="Your name" value={form.name} onChange={sv("name")} maxLength={60} />
               <div className="grid grid-cols-3 gap-3">
                 <Input label="Age" type="number" min="16" max="100" placeholder="30" value={form.age} onChange={sv("age")} />
@@ -279,7 +309,7 @@ export default function Onboarding() {
 
           {/* STEP 1 */}
           {step === 1 && (
-            <motion.div key="s1" initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }} className="space-y-5">
+            <motion.div key="s1" initial={{ opacity: 0, x: 40 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -40 }} transition={{ type: "spring", stiffness: 280, damping: 30 }} className="space-y-5">
               <div>
                 <label className="block text-xs font-semibold mb-3" style={{ color: "var(--c-sub)" }}>
                   Health conditions <span style={{ color: "var(--c-accent)" }}>(select all that apply)</span>
@@ -321,7 +351,7 @@ export default function Onboarding() {
 
           {/* STEP 2 */}
           {step === 2 && (
-            <motion.div key="s2" initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }} className="space-y-5">
+            <motion.div key="s2" initial={{ opacity: 0, x: 40 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -40 }} transition={{ type: "spring", stiffness: 280, damping: 30 }} className="space-y-5">
               {/* Goals multi-select */}
               <div>
                 <label className="block text-xs font-semibold mb-1" style={{ color: "var(--c-sub)" }}>
@@ -393,6 +423,12 @@ export default function Onboarding() {
                 <input type="range" min="2" max="7" value={form.daysPerWeek} onChange={(e) => set("daysPerWeek")(+e.target.value)}
                   className="w-full" style={{ accentColor: "var(--c-accent)" }} />
                 <div className="flex justify-between text-xs mt-1" style={{ color: "var(--c-sub)" }}><span>2 days</span><span>7 days</span></div>
+                <div style={{ marginTop: 4, fontSize: 11, color: "var(--c-sub)" }}>
+                  {form.daysPerWeek <= 2 && "Light routine — great for getting started"}
+                  {form.daysPerWeek === 3 && "3 days: solid for beginners and intermediates"}
+                  {(form.daysPerWeek === 4 || form.daysPerWeek === 5) && "Strong commitment — make recovery a priority"}
+                  {form.daysPerWeek >= 6 && "High frequency — sleep, nutrition, and rest become critical"}
+                </div>
               </div>
 
               {error && <div className="rounded-xl p-3 text-sm" style={{ background: "rgba(255,107,107,0.1)", border: "1px solid rgba(255,107,107,0.3)", color: "#FF6B6B" }}>{error}</div>}

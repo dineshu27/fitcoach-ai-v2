@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Edit3, RefreshCw, AlertCircle, Trash2, TrendingDown, TrendingUp, Minus, Sun, Moon, Sunset, ChevronLeft, ChevronRight, X } from "lucide-react";
@@ -10,6 +10,7 @@ import PlanLoading from "./PlanLoading";
 import { useTheme } from "../lib/theme";
 import { staggerContainer, staggerItemFast } from "../motion/variants";
 import { pressable, pressableIcon } from "../motion/presets";
+import { useCountUp } from "../motion/useCountUp";
 
 const COND_COLORS = {
   "High LDL / High Cholesterol":    { bg: "rgba(255,107,107,0.15)", border: "rgba(255,107,107,0.3)",  color: "#FF6B6B" },
@@ -228,6 +229,83 @@ function WeeklyChart({ calorieTarget }) {
   );
 }
 
+/* ── Stats grid with animated count-up ────────────────────────────── */
+function StatItem({ label, val, color }) {
+  const numVal = typeof val === "number" ? val : parseFloat(val) || 0;
+  const countVal = useCountUp(0, numVal, "confident");
+  return (
+    <motion.div variants={staggerItemFast} className="rounded-2xl p-3 text-center glass">
+      <p className="text-2xl font-extrabold" style={{ color }}>{val != null ? countVal : "—"}</p>
+      <p className="text-[11px] mt-0.5" style={{ color: "var(--c-sub)" }}>{label}</p>
+    </motion.div>
+  );
+}
+
+function StatsGrid({ streak, bmi, workoutsLogged, bmiCat }) {
+  return (
+    <motion.div className="grid grid-cols-3 gap-3" variants={staggerContainer} initial="hidden" animate="show">
+      <StatItem label="Day streak" val={streak} color="var(--c-warn)" />
+      <StatItem label="BMI" val={bmi} color={bmiCat.color || "var(--c-accent)"} />
+      <StatItem label="Workouts" val={workoutsLogged} color="#4ECDC4" />
+    </motion.div>
+  );
+}
+
+/* ── Weight projection chart ───────────────────────────────────────── */
+function WeightProjection({ profile, plan }) {
+  const [horizon, setHorizon] = useState("1m");
+  const HORIZONS = ["1w", "1m", "6m", "1y"];
+  const HORIZON_LABELS = { "1w": "1 week", "1m": "1 month", "6m": "6 months", "1y": "1 year" };
+  const HORIZON_DAYS = { "1w": 7, "1m": 30, "6m": 182, "1y": 365 };
+
+  const currentWeight = profile?.weight || 70;
+  const tdeeApprox = 2000;
+  const calories = plan?.calories || 2000;
+  const dailyDelta = calories - tdeeApprox;
+  const days = HORIZON_DAYS[horizon];
+  const projectedWeight = +(currentWeight + (dailyDelta * days) / 7700).toFixed(1);
+  const delta = +(projectedWeight - currentWeight).toFixed(1);
+
+  const W = 280, H = 50;
+  const startY = delta > 0 ? 10 : 40;
+  const endY = delta > 0 ? 40 : 10;
+  const pathD = `M 0 ${startY} Q ${W/2} ${delta === 0 ? startY : (delta > 0 ? 50 : 0)} ${W} ${endY}`;
+
+  return (
+    <div style={{ background: "var(--c-card)", border: "1px solid var(--c-border)", borderRadius: 16, padding: "12px 14px", marginBottom: 16 }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+        <p style={{ fontSize: 11, fontWeight: 700, color: "var(--c-sub)", letterSpacing: "0.3px" }}>WEIGHT PROJECTION</p>
+        <div style={{ display: "flex", gap: 4 }}>
+          {HORIZONS.map(h => (
+            <button key={h} onClick={() => setHorizon(h)}
+              style={{ padding: "2px 8px", borderRadius: 8, fontSize: 10, fontWeight: 500, cursor: "pointer", border: "none",
+                background: horizon === h ? "var(--c-accent)" : "var(--c-border)", color: horizon === h ? "#fff" : "var(--c-text)" }}>
+              {h}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 12 }}>
+        <p style={{ fontSize: 24, fontWeight: 500, color: "var(--c-text)" }}>{projectedWeight}kg</p>
+        <p style={{ fontSize: 13, fontWeight: 500, color: delta <= 0 ? "#34D399" : "#FC4C02" }}>
+          {delta > 0 ? "↑" : "↓"} {Math.abs(delta)} kg in {HORIZON_LABELS[horizon]}
+        </p>
+      </div>
+      <svg viewBox={`0 0 ${W} ${H}`} style={{ width: "100%", height: "auto", display: "block", marginBottom: 8 }}>
+        <line x1={0} y1={startY} x2={W} y2={startY} stroke="var(--c-border)" strokeWidth={1} strokeDasharray="3 3" />
+        <motion.path d={pathD} fill="none" stroke="var(--c-accent)" strokeWidth={2} strokeLinecap="round"
+          initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 0.8, ease: "easeOut" }} key={horizon} />
+        <circle cx={0} cy={startY} r={3} fill="var(--c-accent)" />
+        <circle cx={W} cy={endY} r={4} fill={delta <= 0 ? "#34D399" : "#FC4C02"} />
+      </svg>
+      <div style={{ display: "flex", justifyContent: "space-between" }}>
+        <p style={{ fontSize: 10, color: "var(--c-sub)" }}>Now · {currentWeight}kg</p>
+        <p style={{ fontSize: 10, color: delta <= 0 ? "#34D399" : "#FC4C02" }}>{HORIZON_LABELS[horizon]} · {projectedWeight}kg</p>
+      </div>
+    </div>
+  );
+}
+
 /* ── Missed day check ─────────────────────────────────────────────── */
 function useMissedDays() {
   const [missedDays, setMissedDays] = useState([]);
@@ -350,18 +428,7 @@ export default function Profile() {
       <div className="px-4 space-y-4 mt-4">
 
         {/* Stats */}
-        <motion.div className="grid grid-cols-3 gap-3" variants={staggerContainer} initial="hidden" animate="show">
-          {[
-            { label: "Day streak", val: streak, color: "var(--c-warn)" },
-            { label: "BMI",        val: plan?.bmi, color: bmiCat.color || "var(--c-accent)" },
-            { label: "Workouts",   val: stats.workoutsLogged, color: "#4ECDC4" },
-          ].map(({ label, val, color }) => (
-            <motion.div key={label} variants={staggerItemFast} className="rounded-2xl p-3 text-center glass">
-              <p className="text-2xl font-extrabold" style={{ color }}>{val ?? "—"}</p>
-              <p className="text-[11px] mt-0.5" style={{ color: "var(--c-sub)" }}>{label}</p>
-            </motion.div>
-          ))}
-        </motion.div>
+        <StatsGrid streak={streak} bmi={plan?.bmi} workoutsLogged={stats.workoutsLogged} bmiCat={bmiCat} />
 
         {/* BMI visual */}
         <div className="rounded-2xl p-4 glass">
@@ -495,6 +562,9 @@ export default function Profile() {
             Estimates only · actual results depend on adherence and metabolism
           </p>
         </div>
+
+        {/* Weight projection chart */}
+        <WeightProjection profile={profile} plan={plan} />
 
         {/* Goals */}
         {goalList.length > 0 && (

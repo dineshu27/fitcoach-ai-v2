@@ -6,8 +6,9 @@ import { pressable } from "../motion/presets";
 import { dur } from "../motion/tokens";
 import {
   Search, Plus, Minus, Flame, Droplets, X, ChevronDown,
-  CheckCircle2, Utensils, Dumbbell, RefreshCw, Zap, Sparkles, Edit2, Check, Camera,
+  CheckCircle2, Utensils, Dumbbell, RefreshCw, Zap, Sparkles, Edit2, Check, Camera, ScanBarcode,
 } from "lucide-react";
+import BarcodeScanner from "../components/BarcodeScanner";
 import { cache } from "../lib/cache";
 import { parseAutoLog, analyzeFoodPhoto } from "../lib/api";
 import REX from "../components/REX";
@@ -812,6 +813,7 @@ export default function TodayLog({ preloadExercise }) {
   const photoRef = useRef(null);
   const [photoScanning, setPhotoScanning] = useState(false);
   const [photoError, setPhotoError]       = useState("");
+  const [showBarcode, setShowBarcode]     = useState(false);
 
   function refresh() { setLog(cache.getTodayLog()); }
   function handleAdd(name, cal, macros) { cache.logCalories(name, cal, macros); refresh(); }
@@ -962,13 +964,22 @@ export default function TodayLog({ preloadExercise }) {
               style={{ background: "var(--c-card)", border: "1px solid var(--c-border)", boxShadow: "var(--c-card-shadow)" }}>
               <div className="flex items-center justify-between mb-3">
                 <p className="text-sm font-bold" style={{ color: "var(--c-text)" }}>Add Food</p>
-                <button
-                  onClick={() => photoRef.current?.click()}
-                  disabled={photoScanning}
-                  className="flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold transition-all active:scale-95 disabled:opacity-50"
-                  style={{ background: "var(--c-accent-bg)", border: "1px solid var(--c-border-bright)", color: "var(--c-accent)" }}>
-                  <Camera size={13} /> {photoScanning ? "Scanning…" : "Scan"}
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => photoRef.current?.click()}
+                    disabled={photoScanning}
+                    className="flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold transition-all active:scale-95 disabled:opacity-50"
+                    style={{ background: "var(--c-accent-bg)", border: "1px solid var(--c-border-bright)", color: "var(--c-accent)" }}>
+                    <Camera size={13} /> {photoScanning ? "Scanning…" : "Scan"}
+                  </button>
+                  <button
+                    onClick={() => setShowBarcode(true)}
+                    className="relative flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold transition-all active:scale-95"
+                    style={{ background: "rgba(252,76,2,0.1)", border: "1px solid var(--c-border-bright)", color: "var(--c-accent)" }}>
+                    <ScanBarcode size={13} /> Barcode
+                    <span style={{ position: "absolute", top: -6, right: -4, background: "var(--c-accent)", color: "#141210", fontSize: 8, fontWeight: 700, padding: "1px 4px", borderRadius: 4 }}>NEW</span>
+                  </button>
+                </div>
                 <input ref={photoRef} type="file" accept="image/*" capture="environment"
                   className="hidden" onChange={handlePhotoCapture} />
               </div>
@@ -1015,6 +1026,15 @@ export default function TodayLog({ preloadExercise }) {
         )}
 
       </div>
+
+      <AnimatePresence>
+        {showBarcode && (
+          <BarcodeScanner
+            onLog={(item) => { handleAdd(item.name, item.calories, { protein: item.protein, carbs: item.carbs, fat: item.fat }); }}
+            onClose={() => setShowBarcode(false)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }

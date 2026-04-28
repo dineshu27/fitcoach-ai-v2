@@ -19,7 +19,11 @@ async function claudeCall(messages, system = null, maxTokens = 1000, timeoutMs =
   const timer = setTimeout(() => controller.abort(), timeoutMs);
 
   const body = { model, max_tokens: maxTokens, messages };
-  if (system) body.system = system;
+  if (system) {
+    body.system = typeof system === "string"
+      ? [{ type: "text", text: system, cache_control: { type: "ephemeral" } }]
+      : system;
+  }
 
   let res;
   try {
@@ -51,6 +55,18 @@ async function claudeCall(messages, system = null, maxTokens = 1000, timeoutMs =
   const ct = res.headers.get("content-type") || "";
   if (!ct.includes("json")) throw new Error("Unexpected response from server.");
   const data = await res.json();
+  // Log cache telemetry
+  try {
+    const today = new Date().toISOString().slice(0, 10);
+    const key = `aiTelemetry:${today}`;
+    const existing = JSON.parse(localStorage.getItem(key) || '{"requests":0,"cacheCreation":0,"cacheRead":0,"input":0,"output":0}');
+    existing.requests = (existing.requests || 0) + 1;
+    existing.cacheCreation = (existing.cacheCreation || 0) + (data.usage?.cache_creation_input_tokens || 0);
+    existing.cacheRead = (existing.cacheRead || 0) + (data.usage?.cache_read_input_tokens || 0);
+    existing.input = (existing.input || 0) + (data.usage?.input_tokens || 0);
+    existing.output = (existing.output || 0) + (data.usage?.output_tokens || 0);
+    localStorage.setItem(key, JSON.stringify(existing));
+  } catch {}
   return data.content.map((b) => b.text || "").join("");
 }
 

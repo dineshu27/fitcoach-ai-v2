@@ -16,6 +16,7 @@ export const dur = {
   fast:        0.18,
   standard:    0.22,
   medium:      0.28,
+  confident:   0.40, // purposeful actions — ring fills, count-ups
   progress:    0.55,
   celebration: 0.75,
 };

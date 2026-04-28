@@ -110,6 +110,33 @@ export const progressFill = {
   },
 };
 
+// ── Chat message slide-in ─────────────────────────────────────────────────────
+// From a compact, slightly-behind state into the natural position.
+// Direction-agnostic: pair with x: 6 or x: -6 in whichever side needs it.
+export const messageSlideIn = {
+  hidden: { opacity: 0, y: 8, scale: 0.97 },
+  show:   { opacity: 1, y: 0, scale: 1, transition: { ...spring.gentle } },
+  exit:   { opacity: 0, scale: 0.97,    transition: { duration: dur.fast, ease: ease.out } },
+};
+
+// ── SVG checkmark draw ────────────────────────────────────────────────────────
+// Stroke path draws in, then badge pops to signal completion.
+export const checkmarkDraw = {
+  hidden: { pathLength: 0, opacity: 0 },
+  show:   {
+    pathLength: 1, opacity: 1,
+    transition: { duration: 0.35, ease: ease.out },
+  },
+};
+
+export const checkmarkPop = {
+  hidden: { scale: 1 },
+  show:   {
+    scale: [1, 1.15, 1],
+    transition: { duration: 0.35, delay: 0.3, ease: ease.inOut },
+  },
+};
+
 // ── Modal / overlay ───────────────────────────────────────────────────────────
 export const modalOverlay = {
   hidden: { opacity: 0 },

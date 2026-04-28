@@ -39,3 +39,12 @@ export const tabPress = {
   whileTap: { scale: 0.96 },
   transition: spring.micro,
 };
+
+// ── Card lift (hover/focus) ────────────────────────────────────────────────────
+// Subtle elevation cue for desktop hover. Mobile: no visual change (hover doesn't apply).
+// Pair with a CSS box-shadow transition for the shadow step-up.
+export const cardLift = {
+  whileHover: { y: -2 },
+  whileFocus: { y: -2 },
+  transition: { duration: dur.micro, ease: ease.sharp },
+};

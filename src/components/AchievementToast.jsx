@@ -1,44 +1,16 @@
-import { useEffect, useMemo } from "react";
+import { useEffect } from "react";
 import { motion } from "framer-motion";
 import { rewardReveal, modalOverlay } from "../motion/variants";
-
-const CONFETTI_COLORS = ["#FC4C02", "#FBBF24", "#4ECDC4", "#6C63FF", "#F87171", "#34D399"];
-
-function Confetti() {
-  const particles = useMemo(() =>
-    Array.from({ length: 22 }, (_, i) => ({
-      id: i,
-      color: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
-      left: 8 + (i * 4.1 + 5) % 84,
-      size: 4 + (i * 3 + 1) % 6,
-      delay: (i * 0.06) % 0.55,
-      duration: 0.85 + (i * 0.09) % 0.9,
-      dx: ((i * 11 + 7) % 70) - 35,
-      dy: 90 + (i * 17) % 130,
-      rotate: (i * 47) % 360,
-    })),
-  []);
-
-  return (
-    <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-3xl">
-      {particles.map(p => (
-        <motion.div
-          key={p.id}
-          className="absolute rounded-sm"
-          style={{ width: p.size, height: p.size, background: p.color, left: `${p.left}%`, top: -8 }}
-          animate={{ y: p.dy, x: p.dx, opacity: [1, 1, 0], rotate: p.rotate }}
-          transition={{ duration: p.duration, delay: p.delay, ease: "easeIn" }}
-        />
-      ))}
-    </div>
-  );
-}
+import { confettiBurst } from "../motion/confetti";
 
 export default function AchievementToast({ type = "personal_best", label = "", onDismiss }) {
+  const isMilestone = type === "streak" || type === "milestone";
+
   useEffect(() => {
+    confettiBurst(isMilestone ? "celebration" : "soft");
     const t = setTimeout(onDismiss, 3500);
     return () => clearTimeout(t);
-  }, [onDismiss]);
+  }, [onDismiss, isMilestone]);
 
   const isPB = type === "personal_best";
 
@@ -65,7 +37,6 @@ export default function AchievementToast({ type = "personal_best", label = "", o
         }}
         onClick={e => e.stopPropagation()}
       >
-        <Confetti />
         <div style={{ fontSize: 52, lineHeight: 1, marginBottom: 16 }}>
           {isPB ? "🏆" : "🔥"}
         </div>

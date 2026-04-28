@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { ThemeProvider } from "./lib/theme";
@@ -12,6 +13,10 @@ import ExercisePlan from "./screens/ExercisePlan";
 import Coach from "./screens/Coach";
 import Profile from "./screens/Profile";
 import BottomNav from "./components/BottomNav";
+
+const AnimationsGallery = import.meta.env.DEV
+  ? lazy(() => import("./screens/AnimationsGallery"))
+  : null;
 
 const MAIN = ["/dashboard", "/log", "/diet", "/exercise", "/profile"];
 
@@ -39,6 +44,16 @@ function AnimatedRoutes() {
             <Route path="/exercise" element={<ExercisePlan />} />
             <Route path="/coach" element={<Coach />} />
             <Route path="/profile" element={<Profile />} />
+            {AnimationsGallery && (
+              <Route
+                path="/dev/animations"
+                element={
+                  <Suspense fallback={null}>
+                    <AnimationsGallery />
+                  </Suspense>
+                }
+              />
+            )}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </motion.div>

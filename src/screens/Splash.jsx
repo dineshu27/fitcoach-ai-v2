@@ -4,75 +4,161 @@ import { motion } from "framer-motion";
 import REX from "../components/REX";
 import { cache } from "../lib/cache";
 
+const prefersReduced = () =>
+  typeof window !== "undefined" &&
+  window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
 export default function Splash() {
   const navigate = useNavigate();
+  const reduced = prefersReduced();
 
   useEffect(() => {
-    const timer = setTimeout(() => {
+    const delay = reduced ? 800 : 1400;
+    const t = setTimeout(() => {
       const profile = cache.getProfile();
       const plan = cache.getPlan();
       navigate(profile && plan ? "/dashboard" : "/onboarding", { replace: true });
-    }, 2600);
-    return () => clearTimeout(timer);
-  }, [navigate]);
+    }, delay);
+    return () => clearTimeout(t);
+  }, [navigate, reduced]);
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center"
-      style={{ background: "var(--c-bg)" }}>
-
-      {/* Glow orb behind REX */}
-      <div className="absolute" style={{ width: 300, height: 300, borderRadius: "50%",
-        background: "radial-gradient(circle, rgba(var(--c-accent-rgb),0.15) 0%, transparent 70%)", pointerEvents: "none" }} />
-
-      {/* REX enters from bottom */}
-      <motion.div
-        initial={{ y: 120, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ type: "spring", damping: 14, stiffness: 100, delay: 0.2 }}
-      >
-        <REX state="celebrating" size="lg" />
-      </motion.div>
-
-      {/* App name */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.7 }}
-        className="mt-8 text-center"
-      >
-        <h1 className="text-5xl font-extrabold tracking-tight"
-          style={{ color: "var(--c-text)", textShadow: "0 0 30px rgba(var(--c-accent-rgb),0.6)" }}>
-          AI Fit<span style={{ color: "var(--c-accent)" }}>Training</span>
-        </h1>
-        <p className="mt-2 text-base font-medium" style={{ color: "var(--c-sub)" }}>
-          Your AI-powered training coach
-        </p>
-      </motion.div>
-
-      {/* Speech bubble from REX */}
-      <motion.div
-        initial={{ opacity: 0, scale: 0.8 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ delay: 1.2 }}
-        className="mt-6 rounded-2xl px-5 py-3 text-sm font-semibold"
-        style={{ background: "rgba(var(--c-accent-rgb),0.15)", border: "1px solid rgba(var(--c-accent-rgb),0.3)", color: "var(--c-text)" }}
-      >
-        🤖 AI coach online. Let's train!
-      </motion.div>
-
-      {/* Progress bar */}
-      <motion.div
-        className="absolute bottom-12 left-1/2 -translate-x-1/2 rounded-full overflow-hidden"
-        style={{ width: 160, height: 3, background: "rgba(var(--c-accent-rgb),0.2)" }}
-      >
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        minHeight: "100svh",
+        background: "#141210",
+        position: "relative",
+        overflow: "hidden",
+      }}
+    >
+      {/* REX card + pulse ring */}
+      <div style={{ position: "relative", display: "inline-flex" }}>
+        {/* Accent ring — single pulse on mount */}
         <motion.div
-          className="h-full rounded-full"
-          style={{ background: "var(--c-accent)", boxShadow: "0 0 8px var(--c-accent)" }}
-          initial={{ width: 0 }}
-          animate={{ width: "100%" }}
-          transition={{ duration: 2.4, ease: "linear" }}
+          initial={{ scale: 1, opacity: 0.35 }}
+          animate={
+            reduced
+              ? { scale: 1, opacity: 0.35 }
+              : {
+                  scale: [1, 1.08, 1],
+                  opacity: [0.35, 0.55, 0.35],
+                }
+          }
+          transition={
+            reduced
+              ? {}
+              : { duration: 1.5, ease: "easeInOut", times: [0, 0.5, 1] }
+          }
+          style={{
+            position: "absolute",
+            inset: -4,
+            borderRadius: 20,
+            border: "2px solid #FC4C02",
+            pointerEvents: "none",
+          }}
         />
-      </motion.div>
+
+        {/* REX card */}
+        <div
+          style={{
+            width: 120,
+            height: 120,
+            borderRadius: 16,
+            background: "#1F1B17",
+            border: "1px solid #2A241F",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <REX state="idle" size="md" />
+        </div>
+      </div>
+
+      {/* Title */}
+      <div style={{ marginTop: 28, textAlign: "center" }}>
+        <h1
+          style={{
+            fontFamily: '"Space Grotesk", sans-serif',
+            fontSize: 32,
+            fontWeight: 500,
+            letterSpacing: "-0.5px",
+            color: "#F5F0EB",
+            margin: 0,
+            lineHeight: 1,
+          }}
+        >
+          FiTAi
+        </h1>
+        <p
+          style={{
+            marginTop: 6,
+            fontSize: 13,
+            color: "#8A7D70",
+            fontWeight: 400,
+          }}
+        >
+          Your AI fitness coach
+        </p>
+      </div>
+
+      {/* Loading dots */}
+      <div
+        style={{
+          marginTop: 32,
+          display: "flex",
+          gap: 6,
+          alignItems: "center",
+        }}
+      >
+        {[1, 0.5, 0.25].map((baseOpacity, i) => (
+          <motion.div
+            key={i}
+            style={{
+              width: 7,
+              height: 7,
+              borderRadius: "50%",
+              background: "#FC4C02",
+            }}
+            animate={
+              reduced
+                ? { opacity: baseOpacity }
+                : { opacity: [baseOpacity, 1, baseOpacity] }
+            }
+            transition={
+              reduced
+                ? {}
+                : {
+                    duration: 0.6,
+                    delay: i * 0.2,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                  }
+            }
+            initial={{ opacity: baseOpacity }}
+          />
+        ))}
+      </div>
+
+      {/* Bottom tagline */}
+      <p
+        style={{
+          position: "absolute",
+          bottom: 28,
+          left: 0,
+          right: 0,
+          textAlign: "center",
+          fontSize: 11,
+          color: "#8A7D70",
+          letterSpacing: "0.02em",
+        }}
+      >
+        Calm · Intelligent · Encouraging
+      </p>
     </div>
   );
 }
